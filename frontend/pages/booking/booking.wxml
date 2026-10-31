@@ -1,0 +1,28 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="预约详情" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{missing}}" text="预约不存在"></empty-state>
+    <block wx:else>
+      <view class="code-box card">
+        <view class="muted"><text>到店出示</text></view>
+        <view class="code"><text>{{code}}</text></view>
+      </view>
+      <view class="card" style="margin:0 16px;overflow:hidden;width:auto;">
+        <view class="list-row"><text>项目</text><text class="row-val">{{b.title}}</text></view>
+        <view class="list-row"><text>时间</text><text class="row-val">{{dateText}} {{b.start}}</text></view>
+        <view class="list-row"><text>状态</text><text class="row-val">{{statusText}}</text></view>
+        <view class="list-row" style="border:none;"><text>门店</text><text class="row-val">{{storeName}}</text></view>
+      </view>
+      <view class="pad" wx:if="{{canCancel}}">
+        <view class="btn btn-ghost btn-block" style="margin:0;" bindtap="cancel"><text>取消预约</text></view>
+        <view wx:if="{{b.kind === 'private'}}" class="btn btn-primary btn-block" style="margin:8px 0 0;" bindtap="reschedule"><text>改约时间</text></view>
+      </view>
+      <view class="pad" wx:elif="{{upcomingLocked}}">
+        <text class="muted">已过取消时限，请联系门店处理。</text>
+      </view>
+      <view class="pad" wx:if="{{b.orderId}}">
+        <view class="btn btn-ghost btn-block" style="margin:0;" bindtap="goOrder"><text>查看订单</text></view>
+      </view>
+    </block>
+  </view>
+</view>

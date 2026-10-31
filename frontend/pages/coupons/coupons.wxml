@@ -1,0 +1,14 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="优惠券" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{empty}}" text="暂时没有优惠券"></empty-state>
+    <view wx:for="{{list}}" wx:key="id" class="voucher" style="opacity: {{item.used ? 0.55 : 1}};">
+      <view class="main" style="flex:1;min-width:0;">
+        <view class="muted"><text>{{item.name}}</text></view>
+        <text class="v-amt">{{item.amountText}}</text>
+        <view class="muted"><text>满 {{item.min}} 可用 · {{item.statusText}}</text></view>
+      </view>
+      <text class="muted">至 {{item.expireText}}</text>
+    </view>
+  </view>
+</view>

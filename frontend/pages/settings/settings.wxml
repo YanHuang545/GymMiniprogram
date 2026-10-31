@@ -1,0 +1,30 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="设置" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <view class="card" style="margin:12px 16px;overflow:hidden;width:auto;">
+      <view class="list-row" data-id="user" bindtap="showLegal">
+        <text>用户协议</text>
+        <icon-mask name="chevron-right" size="18" color="#b07a5e"></icon-mask>
+      </view>
+      <view class="list-row" data-id="privacy" bindtap="showLegal">
+        <text>隐私政策</text>
+        <icon-mask name="chevron-right" size="18" color="#b07a5e"></icon-mask>
+      </view>
+      <view class="list-row" data-id="about" bindtap="showLegal">
+        <text>关于我们</text>
+        <icon-mask name="chevron-right" size="18" color="#b07a5e"></icon-mask>
+      </view>
+      <view class="list-row" style="border:none;color:#e24c4c;" bindtap="logout">
+        <text>注销账号</text>
+        <icon-mask name="chevron-right" size="18" color="#e24c4c"></icon-mask>
+      </view>
+    </view>
+  </view>
+  <overlay-mask show="{{overlayShow}}" bind:close="closeOverlay">
+    <view class="sheet-h"><text>{{legalTitle}}</text></view>
+    <view class="legal-body"><text class="long-text">{{legalBody}}</text></view>
+    <view class="pad">
+      <view class="btn btn-primary btn-block" style="margin:0;" bindtap="closeOverlay"><text>我知道了</text></view>
+    </view>
+  </overlay-mask>
+</view>

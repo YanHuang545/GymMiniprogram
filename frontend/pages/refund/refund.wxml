@@ -1,0 +1,16 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="退款进度" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{missing}}" text="没有退款记录"></empty-state>
+    <block wx:else>
+      <view class="card" style="margin:12px 16px;padding:16px;width:auto;">
+        <view class="price" style="font-size:24px;"><text>{{amountText}}</text></view>
+        <view class="muted"><text>{{statusText}}</text></view>
+      </view>
+      <view class="timeline">
+        <view class="tl-item"><text>已受理取消</text></view>
+        <view class="tl-item"><text>{{done ? '退款已原路返回微信' : '退款处理中，一般几分钟到账，最慢 1-3 个工作日'}}</text></view>
+      </view>
+    </block>
+  </view>
+</view>

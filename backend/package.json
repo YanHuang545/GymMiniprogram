@@ -1,0 +1,21 @@
+{
+  "name": "gym-ranlian-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "燃练健身房预约后端",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "init-db": "node scripts/init-db.js",
+    "ping-db": "node scripts/ping-db.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql2": "^3.14.0"
+  }
+}

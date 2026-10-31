@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "icon-mask": "/components/icon-mask/icon-mask"
+  }
+}

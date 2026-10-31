@@ -1,0 +1,38 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="教练详情" showBack="{{true}}"></nav-bar>
+  <view class="page-body cta-pad">
+    <empty-state wx:if="{{missing}}" text="教练不存在"></empty-state>
+    <block wx:else>
+      <view class="cover-wrap" style="height:280px;">
+        <image class="cover" src="{{c.avatar}}" mode="aspectFill"></image>
+      </view>
+      <view class="pad">
+        <text class="detail-title">{{c.name}}</text>
+        <view class="muted" style="margin-top:4px;"><text>{{c.title}}</text></view>
+        <view style="margin-top:8px;">
+          <text wx:for="{{c.skills}}" wx:key="*this" class="tag tag-orange">{{item}}</text>
+        </view>
+      </view>
+      <view class="article"><text class="long-text">{{c.intro}}</text></view>
+    </block>
+  </view>
+  <view class="sticky-cta" wx:if="{{!missing}}">
+    <text class="muted">{{ctaL}}</text>
+    <view class="btn btn-primary btn-lg" bindtap="book"><text>预约</text></view>
+  </view>
+  <overlay-mask show="{{overlayShow}}" center="{{overlayMode === 'needpkg'}}" bind:close="closeOverlay">
+    <block wx:if="{{overlayMode === 'needpkg'}}">
+      <view style="font-weight:700;margin-bottom:8px;"><text>需要先买课包</text></view>
+      <view class="muted" style="margin-bottom:16px;"><text>没有剩余次数，买完会回到选时间。</text></view>
+      <view class="btn btn-primary btn-block" style="margin:0;" bindtap="goPackages"><text>去买课包</text></view>
+    </block>
+    <block wx:else>
+      <view class="sheet-h"><text>授权手机号</text></view>
+      <view class="pad"><text class="muted">预约和支付需要手机号，用于上课提醒和售后联系。</text></view>
+      <view class="pad">
+        <view class="btn btn-primary btn-lg" style="width:100%;" bindtap="mockPhone"><text>使用微信手机号</text></view>
+        <view class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" bindtap="closeOverlay"><text>取消</text></view>
+      </view>
+    </block>
+  </overlay-mask>
+</view>

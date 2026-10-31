@@ -1,0 +1,13 @@
+<view class="hd" style="height: {{navBarHeight}}px; padding-top: {{statusBarHeight}}px; padding-right: {{capsulePad}}px; background: {{background}};">
+  <view class="hd-inner">
+    <view class="hd-left">
+      <view wx:if="{{showBack}}" class="icon-btn" bindtap="onBack">
+        <icon-mask name="chevron-left" size="22" color="#fff4ec"></icon-mask>
+      </view>
+    </view>
+    <view class="hd-title">
+      <text class="hd-title-text">{{title}}</text>
+    </view>
+    <view class="hd-right"></view>
+  </view>
+</view>

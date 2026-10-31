@@ -1,0 +1,19 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="我的课包" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{empty}}" text="还没有课包"></empty-state>
+    <view wx:if="{{empty}}" class="pad">
+      <view class="btn btn-primary btn-block" style="margin:0;" bindtap="goPackages"><text>去买课包</text></view>
+    </view>
+    <view wx:for="{{list}}" wx:key="id" class="card" style="margin:8px 16px;padding:14px;width:auto;">
+      <text class="mid-title">{{item.name}}</text>
+      <view style="margin-top:8px;">
+        <text>剩余 </text><text class="price">{{item.remain}}</text><text> / {{item.total}} 次</text>
+      </view>
+      <view class="muted" style="margin-top:4px;"><text>有效期至 {{item.expireText}}</text></view>
+      <view style="margin-top:10px;">
+        <view class="btn btn-primary" bindtap="goCoaches"><text>去约教练</text></view>
+      </view>
+    </view>
+  </view>
+</view>

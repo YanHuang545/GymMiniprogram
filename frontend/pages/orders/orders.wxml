@@ -1,0 +1,20 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="我的订单" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{emptyText}}" text="{{emptyText}}"></empty-state>
+    <view
+      wx:for="{{list}}"
+      wx:key="id"
+      class="card"
+      style="margin:8px 16px;padding:12px;width:auto;"
+      data-id="{{item.id}}"
+      bindtap="goItem"
+    >
+      <view style="display:flex;justify-content:space-between;gap:8px;min-width:0;">
+        <text class="mid-title">{{item.title}}</text>
+        <text class="tag">{{item.statusText}}</text>
+      </view>
+      <view class="muted" style="margin-top:6px;"><text>{{item.amountText}} · {{item.timeText}}</text></view>
+    </view>
+  </view>
+</view>

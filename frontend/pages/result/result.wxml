@@ -1,0 +1,20 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="支付结果" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{missing}}" text="没有支付记录"></empty-state>
+    <view wx:else style="text-align:center;padding:48px 16px 16px;">
+      <view class="{{ok ? 'pay-ok' : 'pay-fail'}}">
+        <icon-mask name="{{ok ? 'check' : 'x'}}" size="28" color="#fff"></icon-mask>
+      </view>
+      <view style="font-size:18px;font-weight:700;margin-top:14px;"><text>{{headline}}</text></view>
+      <view class="muted" style="margin-top:8px;line-height:1.7;">
+        <text>{{title}}</text>\n<text>{{when}}</text>
+      </view>
+      <view wx:if="{{ok}}" class="btn btn-primary" style="margin-top:20px;" bindtap="enableNotify"><text>开启上课提醒</text></view>
+      <view style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+        <view class="btn btn-ghost" bindtap="goBookings"><text>查看我的预约</text></view>
+        <view class="btn btn-ghost" bindtap="goHome"><text>返回首页</text></view>
+      </view>
+    </view>
+  </view>
+</view>

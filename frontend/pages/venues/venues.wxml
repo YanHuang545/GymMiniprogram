@@ -1,0 +1,26 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="甄选场馆" showBack="{{false}}"></nav-bar>
+  <view class="page-body tab-pad">
+    <view class="pad" style="padding-bottom:4px;">
+      <text class="muted long-text" style="font-size:13px;line-height:1.6;color:#e2b89a;">品质场馆 · 按次体验 · 没有推销。合作酒店泳池、普拉提馆，买单次即可到店。</text>
+    </view>
+    <view class="grid-2">
+      <view wx:for="{{list}}" wx:key="id" class="card venue-card">
+        <image src="{{item.cover}}" mode="aspectFill"></image>
+        <view style="padding:10px 12px;">
+          <text class="mid-title">{{item.name}}</text>
+          <view style="margin:6px 0;">
+            <text wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this" class="tag">{{t}}</text>
+          </view>
+          <view style="display:flex;justify-content:space-between;align-items:center;min-width:0;">
+            <text class="muted">距你 {{item.dist}}</text>
+            <view style="display:flex;align-items:center;gap:8px;flex:none;">
+              <text class="price">{{item.priceText}}</text>
+              <view class="btn btn-primary" data-id="{{item.id}}" bindtap="goVenue"><text>预约</text></view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

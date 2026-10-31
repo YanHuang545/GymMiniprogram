@@ -1,0 +1,106 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <view class="seg">
+    <view class="seg-btn {{schTab === 'group' ? 'is-on' : ''}}" data-id="group" bindtap="onTab"><text>团课</text></view>
+    <view class="seg-btn {{schTab === 'private' ? 'is-on' : ''}}" data-id="private" bindtap="onTab"><text>私教</text></view>
+    <view class="seg-btn {{schTab === 'camp' ? 'is-on' : ''}}" data-id="camp" bindtap="onTab"><text>训练营</text></view>
+  </view>
+
+  <scroll-view wx:if="{{schTab === 'group'}}" scroll-x enable-flex class="date-strip" enhanced show-scrollbar="{{false}}">
+    <view
+      wx:for="{{dates}}"
+      wx:key="key"
+      class="date-chip {{schDate === item.key ? 'is-on' : ''}}"
+      data-id="{{item.key}}"
+      bindtap="onDate"
+    >
+      <text class="d-num">{{item.num}}</text>
+      <text>{{item.lab}}</text>
+    </view>
+  </scroll-view>
+
+  <scroll-view wx:if="{{schTab === 'group'}}" scroll-x enable-flex class="filter-row" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{typeOn ? 'is-on' : ''}}" data-id="type" bindtap="onFilter"><text>课程类型 ▾</text></view>
+    <view class="chip {{storeOn ? 'is-on' : ''}}" data-id="store" bindtap="onFilter"><text>门店 ▾</text></view>
+  </scroll-view>
+
+  <view class="page-body tab-pad">
+    <block wx:if="{{schTab === 'private'}}">
+      <view class="pad"><text class="muted">约私教请先买课包，再选教练和时间。</text></view>
+      <view
+        wx:for="{{coaches}}"
+        wx:key="id"
+        class="card session-card"
+        data-id="{{item.id}}"
+        bindtap="goCoach"
+      >
+        <image class="avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+        <view class="mid">
+          <text class="mid-title">{{item.name}}</text>
+          <view class="muted" style="margin-top:4px;"><text>{{item.skills[0]}} / {{item.skills[1]}}</text></view>
+        </view>
+        <view class="btn btn-primary" data-id="{{item.id}}" catchtap="goCoach"><text>预约</text></view>
+      </view>
+      <view class="pad">
+        <view class="btn btn-ghost btn-block" style="margin:0;" bindtap="goPackages"><text>去看课包</text></view>
+      </view>
+    </block>
+
+    <block wx:elif="{{schTab === 'camp'}}">
+      <empty-state wx:if="{{emptyText}}" text="{{emptyText}}"></empty-state>
+      <view wx:for="{{camps}}" wx:key="id" class="card camp-card" data-id="{{item.id}}" bindtap="goCamp">
+        <view class="cover-wrap" style="height:180px;">
+          <image class="cover" src="{{item.cover}}" mode="aspectFill"></image>
+        </view>
+        <view style="padding:10px 12px;">
+          <text class="mid-title">{{item.name}}</text>
+          <view style="margin:6px 0;">
+            <text wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this" class="tag">{{t}}</text>
+          </view>
+          <view class="muted"><text>开营 {{item.startText}} · 剩余 {{item.left}} 名额</text></view>
+          <view style="margin-top:6px;"><text class="price">{{item.priceText}}</text></view>
+        </view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <empty-state wx:if="{{emptyText}}" text="{{emptyText}}"></empty-state>
+      <block wx:for="{{groups}}" wx:key="id">
+        <view class="group-h"><text>{{item.title}}</text></view>
+        <view
+          wx:for="{{item.list}}"
+          wx:for-item="s"
+          wx:key="id"
+          class="card session-card"
+          data-id="{{s.id}}"
+          bindtap="goClass"
+        >
+          <image class="avatar" src="{{s.coachAvatar}}" mode="aspectFill"></image>
+          <view class="mid">
+            <text class="mid-title">{{s.name}}</text>
+            <view class="muted" style="margin:4px 0;"><text>{{s.start}}-{{s.end}}</text></view>
+            <view>
+              <text wx:for="{{s.tags}}" wx:for-item="t" wx:key="*this" class="tag">{{t}}</text>
+            </view>
+          </view>
+          <view class="right">
+            <view>
+              <text class="price">{{s.priceText}}</text>
+              <text wx:if="{{s.originText}}" class="origin"> {{s.originText}}</text>
+            </view>
+            <view style="margin-top:6px;">
+              <text wx:if="{{s.full}}" class="btn btn-disabled">已满员</text>
+              <view wx:else class="btn btn-primary" data-id="{{s.id}}" catchtap="goClass"><text>预约</text></view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+  </view>
+
+  <overlay-mask show="{{overlayShow}}" bind:close="closeOverlay">
+    <view class="sheet-h"><text>{{overlayTitle}}</text></view>
+    <view wx:for="{{overlayItems}}" wx:key="id" class="list-row" data-id="{{item.id}}" bindtap="pickOverlay">
+      <text>{{item.name}}</text>
+    </view>
+  </overlay-mask>
+</view>

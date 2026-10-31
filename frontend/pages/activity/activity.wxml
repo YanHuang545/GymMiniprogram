@@ -1,0 +1,36 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="活动详情" showBack="{{true}}"></nav-bar>
+  <view class="page-body cta-pad">
+    <empty-state wx:if="{{missing}}" text="活动不存在"></empty-state>
+    <block wx:else>
+      <view class="cover-wrap">
+        <image class="cover" src="{{a.cover}}" mode="aspectFill"></image>
+      </view>
+      <view class="pad">
+        <text class="detail-title">{{a.name}}</text>
+        <view style="margin-top:8px;"><text class="tag tag-orange">{{statusText}}</text></view>
+      </view>
+      <view class="card info-card">
+        <text class="long-text">{{dateText}} {{a.time}}
+{{storeName}}
+{{feeText}}</text>
+      </view>
+      <view class="article"><text class="long-text">{{a.intro}}</text></view>
+      <view class="pad">
+        <view class="btn btn-ghost" bindtap="contactCs"><text>联系客服报名</text></view>
+      </view>
+    </block>
+  </view>
+  <view class="sticky-cta" wx:if="{{!missing}}">
+    <text class="muted">{{ctaL}}</text>
+    <view class="btn btn-lg {{ctaDisabled ? 'btn-disabled' : 'btn-primary'}}" bindtap="join"><text>{{ctaText}}</text></view>
+  </view>
+  <overlay-mask show="{{overlayShow}}" bind:close="closeOverlay">
+    <view class="sheet-h"><text>授权手机号</text></view>
+    <view class="pad"><text class="muted">预约和支付需要手机号，用于上课提醒和售后联系。</text></view>
+    <view class="pad">
+      <view class="btn btn-primary btn-lg" style="width:100%;" bindtap="mockPhone"><text>使用微信手机号</text></view>
+      <view class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" bindtap="closeOverlay"><text>取消</text></view>
+    </view>
+  </overlay-mask>
+</view>

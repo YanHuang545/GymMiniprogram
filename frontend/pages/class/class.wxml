@@ -1,0 +1,47 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="课程详情" showBack="{{true}}"></nav-bar>
+  <view class="page-body cta-pad">
+    <empty-state wx:if="{{missing}}" text="课程不存在或已下架"></empty-state>
+    <block wx:else>
+      <view class="cover-wrap">
+        <image class="cover" src="{{session.cover}}" mode="aspectFill"></image>
+      </view>
+      <view class="pad">
+        <text class="detail-title">{{session.name}}</text>
+        <view style="margin-top:8px;">
+          <text wx:for="{{session.tags}}" wx:key="*this" class="tag">{{item}}</text>
+        </view>
+      </view>
+      <view class="kv">
+        <view class="kv-cell"><text class="kv-b">{{session.durationMin}} 分钟</text><text class="kv-s">时长</text></view>
+        <view class="kv-cell"><text class="kv-b">{{session.intensity}}</text><text class="kv-s">强度</text></view>
+        <view class="kv-cell"><text class="kv-b">{{session.crowd}}</text><text class="kv-s">适合</text></view>
+      </view>
+      <view class="card info-card">
+        <text class="long-text">时间 {{dateText}} {{session.start}}-{{session.end}}
+地点 {{storeName}} · {{session.room}}
+教练 {{coachName}}
+剩余名额 {{left}} 人</text>
+      </view>
+      <view class="card rule-card">
+        <text class="long-text">取消规则：开课前 6 小时可自助取消，退款原路返回。超时请联系门店。</text>
+      </view>
+      <view class="article"><text class="long-text">{{session.intro}}</text></view>
+    </block>
+  </view>
+  <view class="sticky-cta" wx:if="{{!missing}}">
+    <view>
+      <text class="price">{{priceText}}</text>
+      <text wx:if="{{originText}}" class="origin"> {{originText}}</text>
+    </view>
+    <view class="btn btn-lg {{ctaDisabled ? 'btn-disabled' : 'btn-primary'}}" bindtap="book"><text>{{ctaText}}</text></view>
+  </view>
+  <overlay-mask show="{{overlayShow}}" bind:close="closeOverlay">
+    <view class="sheet-h"><text>授权手机号</text></view>
+    <view class="pad"><text class="muted">预约和支付需要手机号，用于上课提醒和售后联系。</text></view>
+    <view class="pad">
+      <view class="btn btn-primary btn-lg" style="width:100%;" bindtap="mockPhone"><text>使用微信手机号</text></view>
+      <view class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" bindtap="closeOverlay"><text>取消</text></view>
+    </view>
+  </overlay-mask>
+</view>

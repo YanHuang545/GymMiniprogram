@@ -1,0 +1,6 @@
+{
+  "name": "apiProxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "Forward mini program API calls to the existing Express backend. No SQL here."
+}

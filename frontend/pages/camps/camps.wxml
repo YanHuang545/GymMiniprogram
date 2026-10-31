@@ -1,0 +1,18 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="训练营" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <view wx:for="{{list}}" wx:key="id" class="card camp-card" data-id="{{item.id}}" bindtap="goCamp">
+      <view class="cover-wrap" style="height:180px;">
+        <image class="cover" src="{{item.cover}}" mode="aspectFill"></image>
+      </view>
+      <view style="padding:10px 12px;">
+        <text class="mid-title">{{item.name}}</text>
+        <view style="margin:6px 0;">
+          <text wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this" class="tag">{{t}}</text>
+        </view>
+        <view class="muted"><text>开营 {{item.startText}} · 剩余 {{item.left}} 名额</text></view>
+        <view style="margin-top:6px;"><text class="price">{{item.priceText}}</text></view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,13 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="授权说明" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad pad">
+    <view class="card" style="padding:20px;margin:0;">
+      <view class="detail-title" style="margin-bottom:8px;"><text>使用微信头像和昵称</text></view>
+      <view class="muted long-text" style="line-height:1.7;margin-bottom:16px;font-size:13px;">
+        <text>用于展示「我的」页资料。拒绝也可以逛课表，但预约和下单前需要授权手机号。</text>
+      </view>
+      <view class="btn btn-primary btn-lg" style="width:100%;" bindtap="agree"><text>同意并继续</text></view>
+      <view class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" bindtap="skip"><text>先逛逛</text></view>
+    </view>
+  </view>
+</view>

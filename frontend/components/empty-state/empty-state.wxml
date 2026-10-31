@@ -1,0 +1,4 @@
+<view class="empty">
+  <icon-mask name="calendar-days" size="28" color="#8a5a48"></icon-mask>
+  <view><text>{{text}}</text></view>
+</view>

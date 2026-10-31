@@ -1,0 +1,12 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="教练" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <view wx:for="{{list}}" wx:key="id" class="card session-card" data-id="{{item.id}}" bindtap="goCoach">
+      <image class="avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+      <view class="mid">
+        <text class="mid-title">{{item.name}}</text>
+        <view class="muted"><text>{{item.skills[0]}} · {{item.skills[1]}} · {{item.years}} 年</text></view>
+      </view>
+    </view>
+  </view>
+</view>

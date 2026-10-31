@@ -1,0 +1,29 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="选择门店" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <scroll-view scroll-x enable-flex class="filter-row" enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{cities}}"
+        wx:key="*this"
+        class="chip {{item === city ? 'is-on' : ''}}"
+        data-id="{{item}}"
+        bindtap="pickCity"
+      ><text>{{item}}</text></view>
+    </scroll-view>
+    <view
+      wx:for="{{list}}"
+      wx:key="id"
+      class="card store-card"
+      style="margin:8px 16px;"
+      data-id="{{item.id}}"
+      bindtap="pickStore"
+    >
+      <image class="cov" src="{{item.cover}}" mode="aspectFill"></image>
+      <view class="main">
+        <text class="mid-title">{{item.name}}</text>
+        <view class="muted" style="margin-top:6px;"><text>{{item.address}}</text></view>
+        <text wx:if="{{item.id === currentStoreId}}" class="tag tag-orange">当前</text>
+      </view>
+    </view>
+  </view>
+</view>

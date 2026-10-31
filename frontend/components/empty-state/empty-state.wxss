@@ -1,0 +1,8 @@
+:host { display: block; }
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: #b07a5e;
+  font-size: 14px;
+  line-height: 1.7;
+}

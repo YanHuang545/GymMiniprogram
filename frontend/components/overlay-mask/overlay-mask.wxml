@@ -1,0 +1,6 @@
+<view wx:if="{{show}}" class="mask {{center ? 'center' : ''}}" catchtap="onMask">
+  <view class="{{center ? 'dialog' : 'sheet'}}" catchtap="noop">
+    <view wx:if="{{!center}}" class="sheet-grab"></view>
+    <slot></slot>
+  </view>
+</view>

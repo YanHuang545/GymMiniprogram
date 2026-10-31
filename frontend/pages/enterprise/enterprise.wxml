@@ -1,0 +1,29 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="企业服务" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <view class="pad"><text class="muted">提交后店里会打电话跟进，不做在线报价。</text></view>
+    <view class="field">
+      <text class="field-lab">公司名</text>
+      <input class="field-input" value="{{company}}" maxlength="40" bindinput="onCompany" placeholder="请输入公司名" placeholder-class="muted"/>
+      <view class="err"><text>{{e1}}</text></view>
+    </view>
+    <view class="field">
+      <text class="field-lab">联系人</text>
+      <input class="field-input" value="{{name}}" maxlength="20" bindinput="onName" placeholder="请输入联系人" placeholder-class="muted"/>
+      <view class="err"><text>{{e2}}</text></view>
+    </view>
+    <view class="field">
+      <text class="field-lab">电话</text>
+      <input class="field-input" value="{{phone}}" maxlength="11" type="number" bindinput="onPhone" placeholder="11 位手机号" placeholder-class="muted"/>
+      <view class="err"><text>{{e3}}</text></view>
+    </view>
+    <view class="field">
+      <text class="field-lab">需求</text>
+      <textarea class="field-textarea" value="{{need}}" maxlength="200" bindinput="onNeed" placeholder="请填写需求" placeholder-class="muted"></textarea>
+      <view class="err"><text>{{e4}}</text></view>
+    </view>
+    <view class="pad">
+      <view class="btn btn-primary btn-lg btn-block" style="margin:0;" bindtap="submit"><text>提交</text></view>
+    </view>
+  </view>
+</view>

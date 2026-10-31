@@ -1,0 +1,118 @@
+<view class="page-root home-bg" style="padding-top: {{navBarHeight}}px;" catchtap="onPageTap">
+  <view class="page-body tab-pad">
+    <view class="home-loc-wrap" catchtap="noop">
+      <view class="home-loc" style="padding-right: {{capsulePad}}px;" bindtap="toggleStoreDd">
+        <icon-mask name="map-pin" size="18" color="#ff4a1a"></icon-mask>
+        <text class="home-loc-text">{{locText}}</text>
+        <icon-mask name="chevron-down" size="18" color="#fff4ec"></icon-mask>
+      </view>
+      <view wx:if="{{ddOpen}}" class="store-dd">
+        <scroll-view scroll-x enable-flex class="store-dd-cities" enhanced show-scrollbar="{{false}}">
+          <view
+            wx:for="{{cities}}"
+            wx:key="*this"
+            class="chip {{item === ddCity ? 'is-on' : ''}}"
+            data-id="{{item}}"
+            bindtap="pickCity"
+          ><text>{{item}}</text></view>
+        </scroll-view>
+        <view
+          wx:for="{{ddStores}}"
+          wx:key="id"
+          class="store-dd-item {{item.id === currentStoreId ? 'is-on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="pickStore"
+        >
+          <image class="cov" src="{{item.cover}}" mode="aspectFill" binderror="onImgError" data-fb="{{storeFb}}"></image>
+          <view class="main">
+            <text class="mid-title">{{item.name}}</text>
+            <view class="muted" style="margin-top:4px;">
+              <text>{{item.address}}{{item.dist ? ' · ' + item.dist : ''}}</text>
+            </view>
+          </view>
+          <text wx:if="{{item.id === currentStoreId}}" class="tag tag-orange">当前</text>
+        </view>
+      </view>
+    </view>
+
+    <swiper
+      class="home-swiper"
+      autoplay
+      circular
+      interval="4000"
+      current="{{bannerIndex}}"
+      bindchange="onBannerChange"
+    >
+      <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-link="{{item.link}}">
+        <image class="swiper-img" src="{{item.image}}" mode="aspectFill" binderror="onImgError" data-fb="{{item.fb}}"></image>
+        <view class="swiper-cap">
+          <text>{{item.title}}</text>
+          <text class="swiper-sub">{{item.sub}}</text>
+        </view>
+      </swiper-item>
+    </swiper>
+    <view class="dots">
+      <view wx:for="{{banners}}" wx:key="id" class="dot {{index === bannerIndex ? 'is-on' : ''}}"></view>
+    </view>
+
+    <view class="entry-grid">
+      <view class="entry" bindtap="goPath" data-path="/schedule?tab=group">
+        <view class="entry-ico e1"><icon-mask name="dumbbell" size="22" color="#fff"></icon-mask></view>
+        <text class="entry-label">团课</text>
+      </view>
+      <view class="entry" bindtap="goPath" data-path="/packages">
+        <view class="entry-ico e2"><icon-mask name="users" size="22" color="#fff"></icon-mask></view>
+        <text class="entry-label">私教</text>
+      </view>
+      <view class="entry" bindtap="goPath" data-path="/camps">
+        <view class="entry-ico e3"><icon-mask name="sparkles" size="22" color="#fff"></icon-mask></view>
+        <text class="entry-label">训练营</text>
+      </view>
+      <view class="entry" bindtap="goPath" data-path="/store">
+        <view class="entry-ico e4"><icon-mask name="building-2" size="22" color="#fff"></icon-mask></view>
+        <text class="entry-label">门店</text>
+      </view>
+    </view>
+
+    <view class="sec-h"><text class="sec-title">附近门店</text></view>
+    <view class="card store-card" wx:if="{{nearStore}}" bindtap="goPath" data-path="/store?id={{nearStore.id}}">
+      <image class="cov" src="{{nearStore.cover}}" mode="aspectFill" binderror="onImgError" data-fb="{{storeFb}}"></image>
+      <view class="main">
+        <text class="mid-title">{{nearStore.name}}</text>
+        <view class="muted" style="margin-top:6px;">
+          <text>距你 {{nearStore.dist}} · 营业至 {{nearStore.closeHour}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="sec-h">
+      <text class="sec-title">热门课程</text>
+      <view class="more" bindtap="goPath" data-path="/schedule">
+        <text>更多</text>
+        <icon-mask name="chevron-right" size="16" color="#b07a5e"></icon-mask>
+      </view>
+    </view>
+    <scroll-view scroll-x enable-flex class="h-scroll" enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{hotSessions}}"
+        wx:key="id"
+        class="card class-hcard"
+        bindtap="goPath"
+        data-path="/class?id={{item.id}}"
+      >
+        <image class="cov" src="{{item.cover}}" mode="aspectFill" binderror="onImgError" data-fb="{{classFb}}"></image>
+        <view class="meta">
+          <text class="meta-title">{{item.name}}</text>
+          <view class="muted"><text>{{item.start}}</text></view>
+          <text class="price">{{item.priceText}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="sec-h"><text class="sec-title">活动</text></view>
+    <view class="card act-banner" wx:if="{{homeAct}}" bindtap="goPath" data-path="/activity?id={{homeAct.id}}">
+      <image class="cov" src="{{homeAct.cover}}" mode="aspectFill" binderror="onImgError" data-fb="{{actFb}}"></image>
+      <view class="cap"><text>{{homeAct.name}} · {{homeAct.statusText}}</text></view>
+    </view>
+  </view>
+</view>

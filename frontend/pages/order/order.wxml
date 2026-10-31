@@ -1,0 +1,31 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="订单详情" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{missing}}" text="订单不存在"></empty-state>
+    <block wx:else>
+      <view class="card" style="margin:12px 16px;overflow:hidden;width:auto;">
+        <view class="list-row"><text>状态</text><text class="row-val">{{statusText}}</text></view>
+        <view class="list-row"><text>项目</text><text class="row-val">{{o.title}}</text></view>
+        <view class="list-row"><text>金额</text><text class="price">{{amountText}}</text></view>
+        <view class="list-row" style="border:none;"><text>时间</text><text class="row-val">{{o.when || '-'}}</text></view>
+      </view>
+      <view class="pad" wx:if="{{o.status === 'refunding' || o.status === 'refunded'}}">
+        <view class="btn btn-primary btn-block" style="margin:0;" bindtap="goRefund"><text>查看退款进度</text></view>
+      </view>
+      <view class="pad" wx:if="{{o.status === 'pending_payment'}}">
+        <view class="btn btn-primary btn-block" style="margin:0;" bindtap="repay"><text>继续支付</text></view>
+      </view>
+    </block>
+  </view>
+  <overlay-mask show="{{overlayShow}}" bind:close="closeOverlay">
+    <view class="sheet-h"><text>微信支付（演示）</text></view>
+    <view class="sheet-pay">
+      <view class="muted"><text>应付</text></view>
+      <view class="price" style="font-size:28px;margin:8px 0;"><text>{{payAmount}}</text></view>
+    </view>
+    <view class="pad">
+      <view class="btn btn-primary btn-lg" style="width:100%;" bindtap="confirmPay"><text>{{paying ? '支付中' : '确认支付'}}</text></view>
+      <view class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" bindtap="closeOverlay"><text>取消</text></view>
+    </view>
+  </overlay-mask>
+</view>

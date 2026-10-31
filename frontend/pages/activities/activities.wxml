@@ -1,0 +1,21 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <view class="seg">
+    <view class="seg-btn {{actTab === 'open' ? 'is-on' : ''}}" data-id="open" bindtap="onTab"><text>报名中</text></view>
+    <view class="seg-btn {{actTab === 'ended' ? 'is-on' : ''}}" data-id="ended" bindtap="onTab"><text>已结束</text></view>
+  </view>
+  <view class="page-body tab-pad">
+    <empty-state wx:if="{{emptyText}}" text="{{emptyText}}"></empty-state>
+    <view class="grid-2" wx:else>
+      <view wx:for="{{list}}" wx:key="id" class="card act-card" data-id="{{item.id}}" bindtap="goAct">
+        <image src="{{item.cover}}" mode="aspectFill"></image>
+        <view style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;min-width:0;">
+          <view class="main" style="flex:1;min-width:0;">
+            <text class="mid-title">{{item.name}}</text>
+            <view class="muted" style="margin-top:4px;"><text>{{item.dateText}} · {{item.storeName}}</text></view>
+          </view>
+          <text class="{{item.tagClass}}">{{item.statusText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

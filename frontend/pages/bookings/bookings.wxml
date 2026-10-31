@@ -1,0 +1,27 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="我的预约" showBack="{{true}}"></nav-bar>
+  <view class="seg">
+    <view class="seg-btn {{tab === 'upcoming' ? 'is-on' : ''}}" data-id="upcoming" bindtap="onTab"><text>待上课</text></view>
+    <view class="seg-btn {{tab === 'completed' ? 'is-on' : ''}}" data-id="completed" bindtap="onTab"><text>已完成</text></view>
+    <view class="seg-btn {{tab === 'cancelled' ? 'is-on' : ''}}" data-id="cancelled" bindtap="onTab"><text>已取消</text></view>
+  </view>
+  <view class="page-body plain-pad">
+    <empty-state wx:if="{{emptyText}}" text="{{emptyText}}"></empty-state>
+    <view
+      wx:for="{{list}}"
+      wx:key="id"
+      class="card"
+      style="margin:8px 16px;padding:12px;width:auto;"
+      data-id="{{item.id}}"
+      bindtap="goItem"
+    >
+      <view style="display:flex;justify-content:space-between;min-width:0;gap:8px;">
+        <text class="mid-title">{{item.title}}</text>
+        <text class="tag tag-orange">{{item.statusText}}</text>
+      </view>
+      <view class="muted" style="margin-top:6px;">
+        <text>{{item.dateText}} {{item.start}}{{item.end ? '-' + item.end : ''}} · {{item.storeName}}</text>
+      </view>
+    </view>
+  </view>
+</view>

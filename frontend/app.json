@@ -1,0 +1,80 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/venues/venues",
+    "pages/schedule/schedule",
+    "pages/activities/activities",
+    "pages/profile/profile",
+    "pages/auth/auth",
+    "pages/stores/stores",
+    "pages/store/store",
+    "pages/class/class",
+    "pages/confirm/confirm",
+    "pages/result/result",
+    "pages/packages/packages",
+    "pages/package/package",
+    "pages/coaches/coaches",
+    "pages/coach/coach",
+    "pages/slots/slots",
+    "pages/camps/camps",
+    "pages/camp/camp",
+    "pages/venue/venue",
+    "pages/activity/activity",
+    "pages/bookings/bookings",
+    "pages/booking/booking",
+    "pages/orders/orders",
+    "pages/order/order",
+    "pages/refund/refund",
+    "pages/my-packages/my-packages",
+    "pages/coupons/coupons",
+    "pages/enterprise/enterprise",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "燃练",
+    "navigationBarBackgroundColor": "#241812",
+    "backgroundColor": "#16100d",
+    "backgroundTextStyle": "light",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#8a6a58",
+    "selectedColor": "#ff4a1a",
+    "backgroundColor": "#241812",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/venues/venues",
+        "text": "甄选"
+      },
+      {
+        "pagePath": "pages/schedule/schedule",
+        "text": "课表"
+      },
+      {
+        "pagePath": "pages/activities/activities",
+        "text": "活动"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "usingComponents": {
+    "nav-bar": "/components/nav-bar/nav-bar",
+    "icon-mask": "/components/icon-mask/icon-mask",
+    "empty-state": "/components/empty-state/empty-state",
+    "overlay-mask": "/components/overlay-mask/overlay-mask"
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,24 @@
+<view class="page-root" style="padding-top: {{navBarHeight}}px;">
+  <nav-bar title="私教课包" showBack="{{true}}"></nav-bar>
+  <view class="page-body plain-pad">
+    <view class="pad"><text class="muted">买课包后再约教练时间。次数只用于私教，不能抵团课。</text></view>
+    <view wx:for="{{list}}" wx:key="id" class="card pkg-row" data-id="{{item.id}}" bindtap="goPkg">
+      <image class="cov" src="{{item.cover}}" mode="aspectFill"></image>
+      <view class="main">
+        <text class="mid-title">{{item.name}}</text>
+        <view class="muted" style="margin:4px 0;"><text>{{item.sessions}} 节 · {{item.validDays}} 天有效</text></view>
+        <text class="long-text" style="font-size:13px;color:#e2b89a;">{{item.desc}}</text>
+      </view>
+      <text class="price">{{item.priceText}}</text>
+    </view>
+    <view class="sec-h"><text class="sec-title">教练</text></view>
+    <view wx:for="{{coaches}}" wx:key="id" class="card session-card" data-id="{{item.id}}" bindtap="goCoach">
+      <image class="avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+      <view class="mid">
+        <text class="mid-title">{{item.name}}</text>
+        <view class="muted"><text>{{item.title}}</text></view>
+      </view>
+      <icon-mask name="chevron-right" size="18" color="#b07a5e"></icon-mask>
+    </view>
+  </view>
+</view>
