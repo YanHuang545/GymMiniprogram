@@ -2,5 +2,8 @@
   "name": "apiProxy",
   "version": "1.0.0",
   "main": "index.js",
-  "description": "Forward mini program API calls to the existing Express backend. No SQL here."
+  "description": "Forward mini program API calls to the existing Express backend. No SQL here.",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
 }

@@ -1,6 +1,9 @@
+const cloud = require('wx-server-sdk');
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
+
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 var HOST = 'gymbackend.chuckrock.dpdns.org';
 
@@ -15,18 +18,23 @@ function queryString(data) {
   return parts.join('&');
 }
 
-function requestOnce(lib, url, method, body, userId, extra) {
+function requestOnce(lib, url, method, body, userId, extra, openId) {
   return new Promise(function (resolve, reject) {
     var u = new URL(url);
+    var headers = {
+      'content-type': 'application/json',
+      'Content-Length': Buffer.byteLength(body)
+    };
+    if (openId) {
+      headers['X-Open-Id'] = openId;
+    } else {
+      headers['X-User-Id'] = userId || 'U001';
+    }
     var opts = {
       hostname: u.hostname,
       path: u.pathname + u.search,
       method: method,
-      headers: {
-        'content-type': 'application/json',
-        'X-User-Id': userId || 'U001',
-        'Content-Length': Buffer.byteLength(body)
-      },
+      headers: headers,
       timeout: 20000
     };
     if (extra) {
@@ -55,7 +63,7 @@ function requestOnce(lib, url, method, body, userId, extra) {
   });
 }
 
-function requestUpstream(method, path, data, userId) {
+function requestUpstream(method, path, data, userId, openId) {
   var qs = method === 'GET' ? queryString(data) : '';
   var suffix = path + (qs ? (path.indexOf('?') >= 0 ? '&' : '?') + qs : '');
   var body = '';
@@ -63,25 +71,9 @@ function requestUpstream(method, path, data, userId) {
     body = JSON.stringify(data);
   }
 
-  return requestOnce(http, 'http://' + HOST + suffix, method, body, userId).catch(function (err) {
-    if (!err || String(err.message || err).indexOf('ECONNRESET') < 0) {
-      return requestOnce(
-        https,
-        'https://' + HOST + suffix,
-        method,
-        body,
-        userId,
-        { minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3' }
-      );
-    }
-    return requestOnce(
-      https,
-      'https://' + HOST + suffix,
-      method,
-      body,
-      userId,
-      { minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3' }
-    );
+  return requestOnce(http, 'http://' + HOST + suffix, method, body, userId, null, openId).catch(function (err) {
+    var extra = { minVersion: 'TLSv1.3', maxVersion: 'TLSv1.3' };
+    return requestOnce(https, 'https://' + HOST + suffix, method, body, userId, extra, openId);
   });
 }
 
@@ -89,12 +81,19 @@ exports.main = async function (event) {
   var method = String((event && event.method) || 'GET').toUpperCase();
   var path = (event && event.path) || '/api/bootstrap';
   var data = (event && event.data) || {};
-  var userId = (event && event.userId) || 'U001';
+  var wxCtx = {};
+  try {
+    wxCtx = cloud.getWXContext() || {};
+  } catch (e) {
+    wxCtx = {};
+  }
+  var openId = wxCtx.OPENID || '';
+  var userId = openId ? '' : (event && event.userId) || 'U001';
 
   if (path.charAt(0) !== '/') path = '/' + path;
 
   try {
-    var res = await requestUpstream(method, path, data, userId);
+    var res = await requestUpstream(method, path, data, userId, openId);
     var parsed = null;
     try {
       parsed = JSON.parse(res.raw);

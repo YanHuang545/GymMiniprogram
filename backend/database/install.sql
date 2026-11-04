@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
   id VARCHAR(32) NOT NULL,
+  openid VARCHAR(64) NULL DEFAULT NULL,
   nickname VARCHAR(64) NOT NULL DEFAULT '',
   avatar VARCHAR(512) NOT NULL DEFAULT '',
   phone VARCHAR(32) NOT NULL DEFAULT '',
@@ -30,7 +31,9 @@ CREATE TABLE users (
   current_city VARCHAR(32) NOT NULL DEFAULT '北京',
   current_store_id VARCHAR(32) NOT NULL DEFAULT 'ST001',
   seen_auth TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  last_login_at BIGINT NULL DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_openid (openid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE stores (
@@ -280,8 +283,8 @@ SET FOREIGN_KEY_CHECKS = 1;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-INSERT INTO users (id, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth) VALUES
-('U001', '', 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/avatar-user.jpg', '', 0, 0, '北京', 'ST001', 0);
+INSERT INTO users (id, openid, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth, last_login_at) VALUES
+('U001', NULL, '', 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/avatar-user.jpg', '', 0, 0, '北京', 'ST001', 0, NULL);
 
 INSERT INTO stores (id, city, name, dist, hours, phone, address, cover, gallery, tags) VALUES
 ('ST001', '北京', '崇文门全能店', '1.2km', '07:00-22:00', '010-88886666', '东城区崇文门外大街 18 号', 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-chongwen.jpg', '["https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-chongwen.jpg","https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-gallery-1.jpg","https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-gallery-2.jpg"]', '["全能店","可停车"]'),

@@ -1,1 +1,80 @@
-/* 我的页样式在 app.wxss */
+.wx-login-card {
+  margin: 12px 16px 0;
+  padding: 28px 20px 24px;
+  border-radius: 12px;
+  background: #241812;
+  border: 1px solid #3d241c;
+}
+
+.wx-login-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff4ec;
+  margin-bottom: 6px;
+}
+
+.wx-login-sub {
+  text-align: center;
+  font-size: 13px;
+  color: #b07a5e;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.wx-nick {
+  width: 100%;
+  height: 44px;
+  margin: 0 0 16px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #331c16;
+  color: #fff4ec;
+  font-size: 15px;
+}
+
+.wx-login-btn {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  border-radius: 8px;
+  background: #07c160;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.pf-ava-btn {
+  width: 56px !important;
+  min-width: 56px;
+  max-width: 56px;
+  height: 56px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  flex: none;
+  background: transparent;
+  border: none;
+  line-height: 0;
+}
+
+.profile-hero .pf-ava-btn .pf-ava,
+.pf-ava-btn .pf-ava {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+}
+
+.logout-card {
+  margin: 12px 16px 24px;
+  padding: 14px;
+  text-align: center;
+}
+
+.logout-text {
+  color: #e24c4c;
+  font-size: 15px;
+  font-weight: 650;
+}

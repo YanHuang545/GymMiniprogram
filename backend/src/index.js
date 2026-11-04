@@ -79,6 +79,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+process.on('uncaughtException', function (err) {
+  console.error('uncaughtException', err && err.stack ? err.stack : err);
+});
+process.on('unhandledRejection', function (err) {
+  console.error('unhandledRejection', err && err.stack ? err.stack : err);
+});
+
 const port = Number(process.env.PORT || 3000);
 app.listen(port, '0.0.0.0', () => {
   console.log('燃练 API listening on http://127.0.0.1:' + port);

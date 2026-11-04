@@ -2,6 +2,8 @@ var cloudConfig = require('./cloud-config.js');
 
 var SCHEMA = 1;
 var STORE_KEY = 'shoe_wash_demo_store';
+var USER_KEY = 'gym_current_user_id';
+var SESSION_KEY = 'gym_local_session';
 var OSS_HOST = 'gymbackend.chuckrock.dpdns.org';
 
 function photoBase() {
@@ -57,7 +59,7 @@ function emptyData() {
   return {
     version: SCHEMA,
     user: {
-      id: 'U001',
+      id: '',
       nickname: '',
       avatar: ossUrl('avatar-user'),
       phone: '',
@@ -85,13 +87,26 @@ function emptyData() {
   };
 }
 
+function cacheKey(userId) {
+  return STORE_KEY + ':' + (userId || 'anon');
+}
+
 function loadCache() {
   try {
-    var raw = wx.getStorageSync(STORE_KEY);
-    if (!raw) return null;
+    var uid = wx.getStorageSync(USER_KEY) || '';
+    if (!uid) return null;
+    var raw = wx.getStorageSync(cacheKey(uid));
+    if (!raw) {
+      raw = wx.getStorageSync(STORE_KEY);
+      if (!raw) return null;
+      var legacy = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      var legacyData = legacy && legacy.data ? legacy.data : legacy;
+      if (!legacyData || !legacyData.user || legacyData.user.id !== uid) return null;
+      return legacyData;
+    }
     var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
     var data = parsed && parsed.data ? parsed.data : parsed;
-    if (!data || !data.user) return null;
+    if (!data || !data.user || (uid && data.user.id && data.user.id !== uid)) return null;
     return data;
   } catch (e) {
     return null;
@@ -100,11 +115,57 @@ function loadCache() {
 
 function saveCache(data) {
   try {
-    wx.setStorageSync(STORE_KEY, { version: SCHEMA, data: data });
+    var uid = data && data.user && data.user.id;
+    if (uid) wx.setStorageSync(USER_KEY, uid);
+    wx.setStorageSync(cacheKey(uid), { version: SCHEMA, data: data });
     return true;
   } catch (e) {
     return false;
   }
+}
+
+function clearCache() {
+  try {
+    var uid = wx.getStorageSync(USER_KEY) || '';
+    if (uid) wx.removeStorageSync(cacheKey(uid));
+    wx.removeStorageSync(USER_KEY);
+    wx.removeStorageSync(STORE_KEY);
+  } catch (e) {}
+}
+
+function sessionOn() {
+  try {
+    var v = wx.getStorageSync(SESSION_KEY);
+    if (v === '0') return false;
+    if (v === '1') return true;
+    return !!wx.getStorageSync(USER_KEY);
+  } catch (e) {
+    return false;
+  }
+}
+
+function setSession(on) {
+  try {
+    wx.setStorageSync(SESSION_KEY, on ? '1' : '0');
+  } catch (e) {}
+}
+
+function guestView(data) {
+  var g = emptyData();
+  if (!data) return g;
+  g.stores = data.stores || [];
+  g.coaches = data.coaches || [];
+  g.banners = data.banners || [];
+  g.sessions = data.sessions || [];
+  g.packages = data.packages || [];
+  g.camps = data.camps || [];
+  g.venues = data.venues || [];
+  g.activities = data.activities || [];
+  if (data.user) {
+    g.user.currentCity = data.user.currentCity || '北京';
+    g.user.currentStoreId = data.user.currentStoreId || 'ST001';
+  }
+  return g;
 }
 
 function currentStore(data) {
@@ -160,7 +221,7 @@ function sessionExpired(s) {
   var today = now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate());
   if (s.date < today) return true;
   if (s.date > today) return false;
-  var hm = String(s.end || s.start || '00:00');
+  var hm = String(s.start || s.end || '00:00');
   return hm <= pad2(now.getHours()) + ':' + pad2(now.getMinutes());
 }
 
@@ -200,6 +261,10 @@ module.exports = {
   emptyData: emptyData,
   loadCache: loadCache,
   saveCache: saveCache,
+  clearCache: clearCache,
+  sessionOn: sessionOn,
+  setSession: setSession,
+  guestView: guestView,
   currentStore: currentStore,
   remainingPkg: remainingPkg,
   unusedCoupons: unusedCoupons,

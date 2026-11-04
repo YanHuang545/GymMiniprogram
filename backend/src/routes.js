@@ -1,14 +1,51 @@
 const express = require('express');
 const { hydrate, expirePending, mapOrder, mapBooking } = require('./hydrate');
-const { uid, offsetDate, AppError, asyncHandler, ymd, today, addDays, pad } = require('./ids');
+const { uid, offsetDate, AppError, asyncHandler, ymd, today, addDays, isPastStart } = require('./ids');
 
 function createRouter(pool) {
   const router = express.Router();
 
-  router.use((req, res, next) => {
-    req.userId = req.get('X-User-Id') || 'U001';
-    next();
-  });
+  const OSS_AVATAR =
+    'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/avatar-user.jpg';
+
+  async function one(exec, sql, params) {
+    const [rows] = await exec.execute(sql, params);
+    return rows[0] || null;
+  }
+
+  async function seedWelcomeCoupons(exec, userId) {
+    await exec.execute(
+      `INSERT INTO coupons (id, user_id, name, amount, min_amount, status, expire_offset)
+       VALUES (?, ?, '新人券', 10, 50, 'unused', 30), (?, ?, '满减券', 20, 200, 'unused', 45)`,
+      [uid('CP'), userId, uid('CP'), userId]
+    );
+  }
+
+  async function findOrCreateByOpenid(exec, openId) {
+    const existing = await one(exec, 'SELECT id FROM users WHERE openid = ?', [openId]);
+    if (existing) {
+      await exec.execute('UPDATE users SET last_login_at = ? WHERE id = ?', [Date.now(), existing.id]);
+      return existing.id;
+    }
+    const id = uid('U');
+    try {
+      await exec.execute(
+        `INSERT INTO users (
+           id, openid, nickname, avatar, phone, authorized, notify_enabled,
+           current_city, current_store_id, seen_auth, last_login_at
+         ) VALUES (?, ?, '', ?, '', 0, 0, '北京', 'ST001', 0, ?)`,
+        [id, openId, OSS_AVATAR, Date.now()]
+      );
+      await seedWelcomeCoupons(exec, id);
+      return id;
+    } catch (err) {
+      if (err && err.code === 'ER_DUP_ENTRY') {
+        const raced = await one(exec, 'SELECT id FROM users WHERE openid = ?', [openId]);
+        if (raced) return raced.id;
+      }
+      throw err;
+    }
+  }
 
   async function ensureUser(exec, userId) {
     const [rows] = await exec.execute('SELECT id FROM users WHERE id = ?', [userId]);
@@ -17,10 +54,17 @@ function createRouter(pool) {
     }
   }
 
-  async function one(exec, sql, params) {
-    const [rows] = await exec.execute(sql, params);
-    return rows[0] || null;
-  }
+  router.use(
+    asyncHandler(async (req, res, next) => {
+      req.openId = String(req.get('X-Open-Id') || '').trim();
+      if (req.openId) {
+        req.userId = await findOrCreateByOpenid(pool, req.openId);
+        return next();
+      }
+      req.userId = req.get('X-User-Id') || 'U001';
+      next();
+    })
+  );
 
   async function reuseCancelledBooking(conn, userId, whereSql, whereParams, row) {
     const old = await one(
@@ -129,10 +173,33 @@ function createRouter(pool) {
   router.post(
     '/auth/agree',
     asyncHandler(async (req, res) => {
-      await pool.execute(
-        "UPDATE users SET authorized = 1, nickname = ?, seen_auth = 1 WHERE id = ?",
-        ['林燃', req.userId]
-      );
+      const nickname = String((req.body && req.body.nickname) || '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 32);
+      const avatar = String((req.body && req.body.avatar) || '').trim().slice(0, 512);
+      const persistAvatar = /^(https:\/\/|cloud:\/\/)/.test(avatar);
+      if (persistAvatar && nickname) {
+        await pool.execute(
+          'UPDATE users SET authorized = 1, nickname = ?, avatar = ?, seen_auth = 1 WHERE id = ?',
+          [nickname, avatar, req.userId]
+        );
+      } else if (persistAvatar) {
+        await pool.execute(
+          'UPDATE users SET authorized = 1, avatar = ?, seen_auth = 1 WHERE id = ?',
+          [avatar, req.userId]
+        );
+      } else if (nickname) {
+        await pool.execute(
+          'UPDATE users SET authorized = 1, nickname = ?, seen_auth = 1 WHERE id = ?',
+          [nickname, req.userId]
+        );
+      } else {
+        await pool.execute(
+          'UPDATE users SET authorized = 1, seen_auth = 1 WHERE id = ?',
+          [req.userId]
+        );
+      }
       res.json({ ok: true, data: await hydrate(pool, req.userId) });
     })
   );
@@ -185,6 +252,11 @@ function createRouter(pool) {
   router.post(
     '/logout',
     asyncHandler(async (req, res) => {
+      if (req.openId) {
+        await pool.execute('UPDATE users SET authorized = 0 WHERE id = ?', [req.userId]);
+        res.json({ ok: true, data: await hydrate(pool, req.userId) });
+        return;
+      }
       const conn = await pool.getConnection();
       try {
         await conn.beginTransaction();
@@ -240,9 +312,8 @@ function createRouter(pool) {
           );
           if (dup) throw new AppError('不能重复预约同一节课', 409);
           const date = offsetDate(s.date_offset);
-          const nowHm = pad(new Date().getHours()) + ':' + pad(new Date().getMinutes());
-          if (date < ymd(today()) || (date === ymd(today()) && String(s.end_hm || s.start_hm) <= nowHm)) {
-            throw new AppError('已过预约时间', 409);
+          if (isPastStart(date, s.start_hm)) {
+            throw new AppError('这节课已经过期', 409);
           }
           if (await hasConflict(conn, req.userId, date, s.start_hm, s.end_hm)) {
             throw new AppError('这个时间你已经有课了，先取消原来那节', 409);
@@ -442,6 +513,7 @@ function createRouter(pool) {
       const date = body.date;
       const start = body.start;
       if (!coachId || !date || !start) throw new AppError('请选择时段', 400);
+      if (isPastStart(date, start)) throw new AppError('这节课已经过期', 409);
       const hour = Number(String(start).split(':')[0]);
       const end = String(hour + 1).padStart(2, '0') + ':00';
       const conn = await pool.getConnection();

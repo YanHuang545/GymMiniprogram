@@ -23,6 +23,16 @@ function offsetDate(offset) {
   return ymd(addDays(today(), Number(offset) || 0));
 }
 
+function isPastStart(date, start) {
+  if (!date || !start) return false;
+  const now = new Date();
+  const todayStr = ymd(now);
+  const day = String(date);
+  if (day < todayStr) return true;
+  if (day > todayStr) return false;
+  return String(start) <= pad(now.getHours()) + ':' + pad(now.getMinutes());
+}
+
 function asArr(v) {
   if (!v) return [];
   if (Array.isArray(v)) return v;
@@ -62,6 +72,7 @@ module.exports = {
   today,
   addDays,
   offsetDate,
+  isPastStart,
   asArr,
   bool,
   AppError,

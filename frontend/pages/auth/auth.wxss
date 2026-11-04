@@ -1,1 +1,32 @@
-/* auth */
+.auth-ava-btn {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 8px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.auth-ava {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: block;
+}
+
+.auth-nick {
+  width: 100%;
+  height: 44px;
+  margin: 0 0 16px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff4ec;
+  font-size: 15px;
+}
+
+.auth-submit {
+  width: 100%;
+}

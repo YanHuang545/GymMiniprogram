@@ -80,8 +80,7 @@ function requestCloud(method, path, data) {
       data: {
         method: method,
         path: path,
-        data: data || {},
-        userId: userId()
+        data: data || {}
       },
       success: function (res) {
         try {
@@ -137,6 +136,9 @@ function applyPhotoPrefix(prefix) {
   } catch (e) {}
 }
 
+var seedPromise = null;
+var seedTried = false;
+
 function ensurePhotos() {
   if (cloudConfig.photoPrefix) return Promise.resolve();
   try {
@@ -146,19 +148,24 @@ function ensurePhotos() {
       return Promise.resolve();
     }
   } catch (e) {}
-  return new Promise(function (resolve) {
+  if (seedPromise) return seedPromise;
+  if (seedTried) return Promise.resolve();
+  seedTried = true;
+  seedPromise = new Promise(function (resolve) {
     getCloud().callFunction({
       name: 'seedPhotos',
       success: function (res) {
-        var prefix = res && res.result && res.result.photoPrefix;
-        applyPhotoPrefix(prefix);
+        applyPhotoPrefix(res && res.result && res.result.photoPrefix);
+        seedPromise = null;
         resolve();
       },
       fail: function () {
+        seedPromise = null;
         resolve();
       }
     });
   });
+  return seedPromise;
 }
 
 function request(method, path, data) {
@@ -174,8 +181,15 @@ function request(method, path, data) {
     if (!ok && !cloudReady()) {
       return Promise.reject(new Error('云开发未初始化'));
     }
-    return ensurePhotos().then(function () {
-      return requestCloud(method, path, data);
+    var photos = ensurePhotos();
+    return requestCloud(method, path, data).then(function (body) {
+      return photos.then(function () {
+        return rewritePublicUrls(body);
+      });
+    }, function (err) {
+      return photos.then(function () {
+        return Promise.reject(err);
+      });
     });
   });
 }

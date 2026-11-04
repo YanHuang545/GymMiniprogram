@@ -15,7 +15,7 @@
         <icon-mask name="chevron-right" size="18" color="#b07a5e"></icon-mask>
       </view>
       <view class="list-row" style="border:none;color:#e24c4c;" bindtap="logout">
-        <text>注销账号</text>
+        <text>{{logoutLabel}}</text>
         <icon-mask name="chevron-right" size="18" color="#e24c4c"></icon-mask>
       </view>
     </view>

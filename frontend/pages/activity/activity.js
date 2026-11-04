@@ -32,7 +32,7 @@ Page({
     var ctaDisabled = false;
     var ctaL = a.paid ? util.money(a.price) : '免费';
     if (a.status === 'ended' || store.sessionExpired(a)) {
-      ctaText = a.status === 'ended' ? '已结束' : '已过预约时间';
+      ctaText = a.status === 'ended' ? '已结束' : '这节课已经过期';
       ctaDisabled = true;
       ctaL = '只可浏览';
     } else if (a.booked >= a.capacity) { ctaText = '已满'; ctaDisabled = true; }

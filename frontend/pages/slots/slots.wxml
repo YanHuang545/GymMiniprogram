@@ -32,7 +32,7 @@
           bindtap="pickSlot"
         ><text>{{item.id}}</text></view>
       </view>
-      <view class="muted" style="text-align:center;"><text>灰色 = 已被约走</text></view>
+      <view class="muted" style="text-align:center;"><text>灰色 = 已被约走或已过期</text></view>
     </block>
   </view>
   <view class="sticky-cta" wx:if="{{!missing}}">

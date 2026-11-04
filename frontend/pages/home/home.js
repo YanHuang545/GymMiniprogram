@@ -38,12 +38,7 @@ Page({
     nav.setTab(this, 0);
     var that = this;
     getApp().whenReady().then(function () {
-      var app = getApp();
-      if (app.globalData.ui.pendingAuth) {
-        app.globalData.ui.pendingAuth = false;
-        wx.navigateTo({ url: '/pages/auth/auth' });
-        return;
-      }
+      getApp().globalData.ui.pendingAuth = false;
       that.refresh();
     }).catch(function () {
       that.refresh();

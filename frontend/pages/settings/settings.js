@@ -1,4 +1,3 @@
-var store = require('../../utils/store.js');
 var util = require('../../utils/util.js');
 var nav = require('../../utils/nav.js');
 var pull = require('../../utils/refresh.js');
@@ -14,28 +13,31 @@ Page({
     navBarHeight: 64,
     overlayShow: false,
     legalTitle: '',
-    legalBody: ''
+    legalBody: '',
+    logoutLabel: '注销账号'
   },
-  onLoad: function () { this.setData(getApp().layout()); },
+  onLoad: function () {
+    var layout = getApp().layout();
+    layout.logoutLabel = this.isWechatUser() ? '退出登录' : '注销账号';
+    this.setData(layout);
+  },
   onPullDownRefresh: pull.onPullDownRefresh,
+  isWechatUser: function () {
+    var user = getApp().getData().user;
+    return !!(user && user.id && user.id !== 'U001');
+  },
   showLegal: function (e) {
     var x = LEGAL[e.currentTarget.dataset.id] || LEGAL.about;
     this.setData({ overlayShow: true, legalTitle: x.t, legalBody: x.b });
   },
   closeOverlay: function () { this.setData({ overlayShow: false }); },
   logout: function () {
-    var api = require('../../utils/api.js');
-    util.confirmDialog('注销账号', '将清除本地预约、订单和课包数据，且不可恢复。', '确认注销').then(function (ok) {
-      if (!ok) return;
-      api.post('/api/logout').then(function (payload) {
-        try { wx.removeStorageSync(store.STORE_KEY); } catch (e) {}
-        getApp().applyServerData(payload);
-        getApp().globalData.ui.pendingAuth = !payload.user.seenAuth;
-        util.toast('账号已注销');
-        nav.go('/home');
-      }).catch(function (err) {
-        util.toast((err && err.message) || '注销失败');
-      });
+    var wechatProfile = require('../../utils/wechat-profile.js');
+    wechatProfile.logoutSession().then(function (res) {
+      if (res && res.cancelled) return;
+      nav.go('/profile');
+    }).catch(function (err) {
+      util.toast((err && err.message) || '操作失败');
     });
   }
 });

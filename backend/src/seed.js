@@ -6,9 +6,9 @@ function oss(name) {
 
 async function seed(conn) {
   await conn.execute(
-    `INSERT INTO users (id, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ['U001', '', oss('avatar-user'), '', 0, 0, '北京', 'ST001', 0]
+    `INSERT INTO users (id, openid, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth, last_login_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ['U001', null, '', oss('avatar-user'), '', 0, 0, '北京', 'ST001', 0, null]
   );
 
   const stores = [

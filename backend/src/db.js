@@ -49,6 +49,13 @@ const pool = mysql.createPool(
   })
 );
 
+const rawPool = pool.pool || pool;
+if (rawPool && typeof rawPool.on === 'function') {
+  rawPool.on('error', function (err) {
+    console.error('mysql pool', (err && err.code) || '', (err && err.message) || err);
+  });
+}
+
 async function createAdminConnection(extra) {
   const extraCfg = Object.assign({ multipleStatements: true }, extra || {});
   if (env('DB_CREATE', '1') === '0' && extraCfg.database === undefined) {

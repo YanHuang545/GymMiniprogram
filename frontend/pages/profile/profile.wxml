@@ -1,27 +1,50 @@
 <view class="page-root" style="padding-top: {{navBarHeight}}px;">
   <view class="page-body tab-pad">
-    <view class="profile-hero" bindtap="onAuth">
-      <image class="pf-ava" src="{{avatar}}" mode="aspectFill"></image>
-      <view class="pf-main">
-        <text class="pf-name">{{name}}</text>
-        <view style="font-size:12px;opacity:.9;margin-top:4px;"><text>欢迎来到燃练</text></view>
+    <block wx:if="{{loggedIn}}">
+      <view class="profile-hero">
+        <button class="pf-ava-btn" size="mini" hover-class="none" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image class="pf-ava" src="{{avatar}}" mode="aspectFill"></image>
+        </button>
+        <view class="pf-main">
+          <text class="pf-name">{{name}}</text>
+          <view style="font-size:12px;opacity:.9;margin-top:4px;"><text>欢迎来到燃练</text></view>
+        </view>
       </view>
-    </view>
+    </block>
+    <block wx:if="{{loginNeedNick || needWxName}}">
+      <view class="wx-login-card">
+        <view class="wx-login-title"><text>选择微信昵称</text></view>
+        <view class="wx-login-sub"><text>点输入框，选键盘上方「用微信昵称」。那是你微信里显示的名字，不是微信号。</text></view>
+        <form bindsubmit="onNickLogin">
+          <input type="nickname" name="nickname" class="wx-nick" placeholder="点选微信昵称" maxlength="32"/>
+          <button class="wx-login-btn" form-type="submit">完成</button>
+        </form>
+      </view>
+    </block>
+    <block wx:elif="{{!loggedIn}}">
+      <view class="wx-login-card">
+        <view class="wx-login-title"><text>微信登录</text></view>
+        <view class="wx-login-sub"><text>点击后选择你的微信头像即可登录</text></view>
+        <button class="wx-login-btn" hover-class="none" open-type="chooseAvatar" bindchooseavatar="onWxLogin">微信登录</button>
+      </view>
+    </block>
 
-    <view class="card asset-bar">
-      <view class="asset-btn" data-path="/my-packages" bindtap="goPath">
-        <text class="asset-num">{{pkg}}</text>
-        <text class="asset-lab">课包剩余(次)</text>
+    <block wx:if="{{loggedIn}}">
+      <view class="card asset-bar">
+        <view class="asset-btn" data-path="/my-packages" bindtap="goPath">
+          <text class="asset-num">{{pkg}}</text>
+          <text class="asset-lab">课包剩余(次)</text>
+        </view>
+        <view class="asset-btn" data-path="/coupons" bindtap="goPath">
+          <text class="asset-num">{{coupon}}</text>
+          <text class="asset-lab">优惠券(张)</text>
+        </view>
       </view>
-      <view class="asset-btn" data-path="/coupons" bindtap="goPath">
-        <text class="asset-num">{{coupon}}</text>
-        <text class="asset-lab">优惠券(张)</text>
-      </view>
-    </view>
 
-    <view class="card train-card">
-      <text>{{trainText}}</text>
-    </view>
+      <view class="card train-card">
+        <text>{{trainText}}</text>
+      </view>
+    </block>
 
     <view class="card menu-card">
       <view class="list-row" data-path="/bookings" bindtap="goPath">
@@ -59,6 +82,10 @@
         </view>
         <icon-mask name="chevron-right" size="18" color="#b07a5e"></icon-mask>
       </view>
+    </view>
+
+    <view wx:if="{{loggedIn}}" class="card logout-card" bindtap="logout">
+      <text class="logout-text">退出登录</text>
     </view>
   </view>
 </view>

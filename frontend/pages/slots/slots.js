@@ -51,8 +51,9 @@ Page({
       taken['16:00'] = 1;
     }
     var slots = hours.map(function (h) {
-      var busy = !!taken[h];
-      return { id: h, busy: busy, on: ui.selectedSlot === h && !busy };
+      var expired = store.sessionExpired({ date: ui.slotDate, start: h });
+      var busy = !!taken[h] || expired;
+      return { id: h, busy: busy, expired: expired, on: ui.selectedSlot === h && !busy };
     });
     this.setData({
       missing: false,
@@ -73,6 +74,7 @@ Page({
   pickSlot: function (e) {
     var id = e.currentTarget.dataset.id;
     var slot = (this.data.slots || []).find(function (s) { return s.id === id; });
+    if (slot && slot.expired) return util.toast('这节课已经过期');
     if (slot && slot.busy) return util.toast('这个时间刚被约走，换一个吧');
     getApp().globalData.ui.selectedSlot = id;
     this.build(this.data.c);
@@ -84,6 +86,7 @@ Page({
     var c = this.data.c;
     var start = ui.selectedSlot;
     var endH = util.pad(util.num(start.split(':')[0]) + 1) + ':00';
+    if (store.sessionExpired({ date: ui.slotDate, start: start })) return util.toast('这节课已经过期');
     if (store.conflictBooking(d, ui.slotDate, start, endH)) return util.toast('这个时间你已经有课了');
     var payload = {
       coachId: c.id,

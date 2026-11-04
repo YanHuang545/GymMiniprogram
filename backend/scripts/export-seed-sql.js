@@ -30,9 +30,9 @@ lines.push('SET FOREIGN_KEY_CHECKS = 0;');
 lines.push('');
 
 lines.push(
-  'INSERT INTO users (id, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth) VALUES'
+  'INSERT INTO users (id, openid, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth, last_login_at) VALUES'
 );
-lines.push(row(['U001', '', oss('avatar-user'), '', 0, 0, '北京', 'ST001', 0]) + ';');
+lines.push(row(['U001', null, '', oss('avatar-user'), '', 0, 0, '北京', 'ST001', 0, null]) + ';');
 lines.push('');
 
 const stores = [

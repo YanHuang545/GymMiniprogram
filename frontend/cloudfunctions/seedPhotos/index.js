@@ -51,7 +51,30 @@ function download(url) {
   });
 }
 
+async function readPrefix() {
+  try {
+    var doc = await cloud.database().collection('app_meta').doc('photos').get();
+    return (doc && doc.data && doc.data.photoPrefix) || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+async function savePrefix(prefix) {
+  if (!prefix) return;
+  try {
+    await cloud.database().collection('app_meta').doc('photos').set({
+      data: { photoPrefix: prefix, at: Date.now() }
+    });
+  } catch (e) {}
+}
+
 exports.main = async function () {
+  var cached = await readPrefix();
+  if (cached) {
+    return { ok: true, count: 0, photoPrefix: cached, skipped: true, uploaded: [], failed: [] };
+  }
+
   var uploaded = [];
   var failed = [];
   for (var i = 0; i < FILES.length; i++) {
@@ -71,6 +94,7 @@ exports.main = async function () {
   if (uploaded[0] && uploaded[0].fileID) {
     prefix = uploaded[0].fileID.replace(/[^/]+$/, '');
   }
+  await savePrefix(prefix);
   return {
     ok: failed.length === 0,
     count: uploaded.length,

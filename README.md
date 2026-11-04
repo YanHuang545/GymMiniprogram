@@ -60,9 +60,10 @@ sequenceDiagram
   participant EX as Aliyun Express
   participant DB as Aliyun MySQL
 
-  Phone->>CF: callFunction({ method, path, data, userId })
+  Phone->>CF: callFunction({ method, path, data })
   Note over Phone,CF: legal-domain list does not apply
-  CF->>EX: HTTP gymbackend.chuckrock.dpdns.org + path
+  Note over CF: cloud.getWXContext OPENID
+  CF->>EX: HTTP + X-Open-Id
   EX->>DB: SELECT / INSERT bookings, orders
   DB-->>EX: rows
   EX-->>CF: { ok, data }
@@ -82,6 +83,82 @@ sequenceDiagram
 | Express + static photos | `backend/src/index.js` → `/api`, `/oss-photos`, `/health` |
 | Routes + mock pay | `backend/src/routes.js` |
 | Pool | `backend/src/db.js` |
+| OpenId → user | `backend/src/routes.js` → `findOrCreateByOpenid` |
+
+---
+
+## WeChat login, per account
+
+Identity on a trial phone is the WeChat **OPENID** injected into `apiProxy`. Express finds or inserts `users` by `openid` and hydrates **that user only**. Simulator has no cloud context, so it still sends `X-User-Id: U001`.
+
+The orange “Me” header shows **燃练学员：{WeChat nick}**. That nick is the name other people see in WeChat chats (`input type="nickname"`), **not** the WeChat ID / `openid`. Avatar is `button open-type="chooseAvatar"`. WeChat does not let a mini program read nick or avatar silently.
+
+Logout sets `users.authorized = 0` and **does not DELETE** bookings. Hydrate joins personal rows on `authorized = 1`, so “My bookings” / “My orders” still hit MySQL and come back empty until the same WeChat logs in again.
+
+```mermaid
+flowchart TB
+  subgraph Phone["WeChat trial / phone"]
+    Me["pages/profile 微信登录"]
+    Ava["chooseAvatar"]
+    Nick["input type=nickname"]
+  end
+
+  subgraph Tencent["Tencent Cloud Base"]
+    CF["apiProxy getWXContext OPENID"]
+  end
+
+  subgraph Aliyun["Aliyun Express + MySQL"]
+    EX["findOrCreateByOpenid"]
+    U["users.openid unique"]
+    B["bookings / orders WHERE user_id"]
+  end
+
+  Me --> Ava --> Nick
+  Me -->|"callFunction apiProxy"| CF
+  CF -->|"X-Open-Id"| EX
+  EX --> U
+  U -->|"authorized = 1"| B
+```
+
+```mermaid
+sequenceDiagram
+  participant Phone as Trial phone
+  participant CF as Tencent apiProxy
+  participant EX as Aliyun Express
+  participant DB as Aliyun MySQL
+
+  Phone->>CF: callFunction apiProxy
+  Note over CF: OPENID from WeChat, ignore client userId
+  CF->>EX: X-Open-Id
+  EX->>DB: SELECT users WHERE openid
+  alt first visit
+    EX->>DB: INSERT users + welcome coupons
+  end
+  Phone->>Phone: chooseAvatar + WeChat nick
+  Phone->>CF: POST /api/auth/agree nick + avatar
+  CF->>EX: same OPENID
+  EX->>DB: UPDATE authorized = 1, nickname, avatar
+  EX->>DB: SELECT bookings JOIN users authorized = 1
+  DB-->>EX: this WeChat user only
+  EX-->>Phone: hydrate
+
+  Note over Phone,DB: logout
+  Phone->>EX: POST /api/logout
+  EX->>DB: UPDATE authorized = 0
+  EX->>DB: SELECT bookings JOIN authorized = 1
+  DB-->>EX: empty personal rows, rows still stored
+```
+
+| Hop | File |
+| --- | --- |
+| Login UI on 我的 | `frontend/pages/profile/` |
+| Nick + avatar helpers | `frontend/utils/wechat-profile.js` |
+| Inject OPENID, no client `userId` | `frontend/cloudfunctions/apiProxy/index.js` |
+| Find/create user, logout flag | `backend/src/routes.js` |
+| Personal lists only if `authorized = 1` | `backend/src/hydrate.js` |
+| DevTools still `X-User-Id` U001 | `frontend/utils/api.js` → `requestXhr()` |
+
+Two WeChat accounts on trial each get empty bookings plus welcome coupons. U001 demo data stays on the simulator.
 
 ---
 

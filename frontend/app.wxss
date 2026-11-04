@@ -809,7 +809,7 @@ cover-image.pf-ava {
   border-radius: 50%;
   flex: none;
   display: block;
-  border: 2px solid rgba(255,255,255,.4);
+  border: none;
 }
 
 .pf-main {

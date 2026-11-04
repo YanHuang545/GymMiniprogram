@@ -47,14 +47,14 @@ Page({
       priceText: util.money(s.price),
       originText: s.originPrice ? util.money(s.originPrice) : '',
       dateText: util.md(s.date),
-      ctaText: expired ? '已过预约时间' : left <= 0 ? '已满员' : '立即预约',
+      ctaText: expired ? '这节课已经过期' : left <= 0 ? '已满员' : '立即预约',
       ctaDisabled: expired || left <= 0
     });
   },
   book: function () {
     var d = getApp().getData();
     var s = store.findById(d.sessions, this.id);
-    if (!s || store.sessionExpired(s)) return util.toast('已过预约时间');
+    if (!s || store.sessionExpired(s)) return util.toast('这节课已经过期');
     if (store.sessionFull(s)) return util.toast('这节课已满员');
     if (!biz.needPhone(this)) return;
     if (store.alreadyBookedSession(d, s.id)) return util.toast('你已经约过这节课了');

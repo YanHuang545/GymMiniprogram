@@ -3,8 +3,8 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-INSERT INTO users (id, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth) VALUES
-('U001', '', 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/avatar-user.jpg', '', 0, 0, '北京', 'ST001', 0);
+INSERT INTO users (id, openid, nickname, avatar, phone, authorized, notify_enabled, current_city, current_store_id, seen_auth, last_login_at) VALUES
+('U001', NULL, '', 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/avatar-user.jpg', '', 0, 0, '北京', 'ST001', 0, NULL);
 
 INSERT INTO stores (id, city, name, dist, hours, phone, address, cover, gallery, tags) VALUES
 ('ST001', '北京', '崇文门全能店', '1.2km', '07:00-22:00', '010-88886666', '东城区崇文门外大街 18 号', 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-chongwen.jpg', '["https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-chongwen.jpg","https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-gallery-1.jpg","https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/store-gallery-2.jpg"]', '["全能店","可停车"]'),

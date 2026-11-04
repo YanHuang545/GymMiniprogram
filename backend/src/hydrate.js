@@ -311,12 +311,42 @@ async function hydrate(pool, userId) {
     pool.execute('SELECT * FROM camps ORDER BY start_offset, id'),
     pool.execute('SELECT * FROM venues ORDER BY id'),
     pool.execute('SELECT * FROM activities ORDER BY act_date DESC, id'),
-    pool.execute('SELECT * FROM coupons WHERE user_id = ? ORDER BY id', [userId]),
-    pool.execute('SELECT * FROM owned_packages WHERE user_id = ? ORDER BY id', [userId]),
-    pool.execute('SELECT * FROM bookings WHERE user_id = ? ORDER BY created_at DESC', [userId]),
-    pool.execute('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]),
-    pool.execute('SELECT * FROM payments WHERE user_id = ? ORDER BY paid_at DESC', [userId]),
-    pool.execute('SELECT * FROM enterprise_leads WHERE user_id = ? ORDER BY created_at DESC', [userId])
+    pool.execute(
+      `SELECT c.* FROM coupons c
+       INNER JOIN users u ON u.id = c.user_id AND u.authorized = 1
+       WHERE c.user_id = ? ORDER BY c.id`,
+      [userId]
+    ),
+    pool.execute(
+      `SELECT p.* FROM owned_packages p
+       INNER JOIN users u ON u.id = p.user_id AND u.authorized = 1
+       WHERE p.user_id = ? ORDER BY p.id`,
+      [userId]
+    ),
+    pool.execute(
+      `SELECT b.* FROM bookings b
+       INNER JOIN users u ON u.id = b.user_id AND u.authorized = 1
+       WHERE b.user_id = ? ORDER BY b.created_at DESC`,
+      [userId]
+    ),
+    pool.execute(
+      `SELECT o.* FROM orders o
+       INNER JOIN users u ON u.id = o.user_id AND u.authorized = 1
+       WHERE o.user_id = ? ORDER BY o.created_at DESC`,
+      [userId]
+    ),
+    pool.execute(
+      `SELECT p.* FROM payments p
+       INNER JOIN users u ON u.id = p.user_id AND u.authorized = 1
+       WHERE p.user_id = ? ORDER BY p.paid_at DESC`,
+      [userId]
+    ),
+    pool.execute(
+      `SELECT l.* FROM enterprise_leads l
+       INNER JOIN users u ON u.id = l.user_id AND u.authorized = 1
+       WHERE l.user_id = ? ORDER BY l.created_at DESC`,
+      [userId]
+    )
   ]);
 
   const user = users[0]

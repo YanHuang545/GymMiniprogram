@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
   id VARCHAR(32) NOT NULL,
+  openid VARCHAR(64) NULL DEFAULT NULL,
   nickname VARCHAR(64) NOT NULL DEFAULT '',
   avatar VARCHAR(512) NOT NULL DEFAULT '',
   phone VARCHAR(32) NOT NULL DEFAULT '',
@@ -28,7 +29,9 @@ CREATE TABLE users (
   current_city VARCHAR(32) NOT NULL DEFAULT '北京',
   current_store_id VARCHAR(32) NOT NULL DEFAULT 'ST001',
   seen_auth TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  last_login_at BIGINT NULL DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_openid (openid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE stores (

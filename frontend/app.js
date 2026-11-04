@@ -11,6 +11,7 @@ App({
     navBarHeight: 64,
     capsulePad: 96,
     data: null,
+    serverData: null,
     cloudReady: false,
     cloud: null,
     bootPromise: null,
@@ -37,7 +38,9 @@ App({
 
   onLaunch: function () {
     this.initLayout();
-    this.globalData.data = store.loadCache() || store.emptyData();
+    var cached = store.loadCache() || store.emptyData();
+    this.globalData.serverData = cached;
+    this.globalData.data = cached;
     var that = this;
     util.showBusy('加载中');
     this.globalData.bootPromise = this.prepareCloud().then(function () {
@@ -126,10 +129,11 @@ App({
   },
 
   applyServerData: function (data) {
+    this.globalData.serverData = data;
     this.globalData.data = data;
     store.saveCache(data);
     if (!data.user.seenAuth) this.globalData.ui.pendingAuth = true;
-    return data;
+    return this.globalData.data;
   },
 
   sync: function () {
