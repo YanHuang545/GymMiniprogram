@@ -98,7 +98,7 @@ function goPay() {
       failToast(err);
       return null;
     }
-    return api.get('/api/checkout', ck).then(function (order) {
+    return api.post('/api/checkout', ck).then(function (order) {
       util.hideBusy();
       return order;
     }).catch(function (err2) {
@@ -114,7 +114,7 @@ function doPaySuccess(order) {
   util.showBusy('支付中');
   return api.post('/api/orders/' + order.id + '/pay').catch(function (err) {
     if (!isResetErr(err)) throw err;
-    return api.get('/api/orders/' + order.id + '/pay');
+    return api.post('/api/orders/' + order.id + '/pay');
   }).then(function () {
     return getApp().sync();
   }).then(function () {

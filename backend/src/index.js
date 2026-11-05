@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Shanghai';
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const path = require('path');

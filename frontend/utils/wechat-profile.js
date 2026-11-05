@@ -54,6 +54,7 @@ function isPlaceholderName(name) {
     name === '微信用户' ||
     name === '点击授权登录' ||
     name === '燃练学员' ||
+    name === '微信昵称' ||
     name === '微信登录'
   );
 }
@@ -66,8 +67,7 @@ function realNickname(name) {
 }
 
 function displayName(nickname) {
-  var n = realNickname(nickname);
-  return n ? '燃练学员：' + n : '燃练学员';
+  return realNickname(nickname);
 }
 
 function submitProfile(nickname, avatarUrl) {
@@ -105,6 +105,7 @@ function logoutSession() {
     : '退出后本机看不到你的预约和订单。用同一个微信再登录，数据还在。';
   return util.confirmDialog(title, body, '确认退出').then(function (ok) {
     if (!ok) return { cancelled: true };
+    util.showBusy('退出登录中');
     return api.post('/api/logout').then(function (payload) {
       store.setSession(false);
       store.clearCache();
@@ -113,6 +114,9 @@ function logoutSession() {
       app.globalData.ui.pendingAuth = true;
       util.toast('已退出登录');
       return { cancelled: false, demo: demo };
+    }).catch(function (err) {
+      util.hideBusy();
+      throw err;
     });
   });
 }

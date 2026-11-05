@@ -265,26 +265,53 @@ function mapLead(r) {
   };
 }
 
+function didChange(result) {
+  if (!result) return false;
+  const n =
+    result.changedRows != null ? Number(result.changedRows) : Number(result.affectedRows);
+  return n > 0;
+}
+
 async function expirePending(exec) {
   const cutoff = Date.now() - 15 * 60 * 1000;
   const [orders] = await exec.execute(
-    "SELECT id, session_id FROM orders WHERE status = 'pending_payment' AND created_at < ?",
+    `SELECT id, session_id, camp_id, activity_id, coupon_id
+     FROM orders WHERE status = 'pending_payment' AND created_at < ? FOR UPDATE`,
     [cutoff]
   );
   for (const o of orders) {
-    await exec.execute("UPDATE orders SET status = 'closed' WHERE id = ?", [o.id]);
+    const [result] = await exec.execute(
+      "UPDATE orders SET status = 'closed' WHERE id = ? AND status = 'pending_payment'",
+      [o.id]
+    );
+    if (!didChange(result)) continue;
     if (o.session_id) {
       await exec.execute(
         'UPDATE sessions SET booked = GREATEST(booked - 1, 0) WHERE id = ?',
         [o.session_id]
       );
     }
+    if (o.camp_id) {
+      await exec.execute(
+        'UPDATE camps SET booked = GREATEST(booked - 1, 0) WHERE id = ?',
+        [o.camp_id]
+      );
+    }
+    if (o.activity_id) {
+      await exec.execute(
+        'UPDATE activities SET booked = GREATEST(booked - 1, 0) WHERE id = ?',
+        [o.activity_id]
+      );
+    }
+    if (o.coupon_id) {
+      await exec.execute("UPDATE coupons SET status = 'unused' WHERE id = ? AND status = 'used'", [
+        o.coupon_id
+      ]);
+    }
   }
 }
 
 async function hydrate(pool, userId) {
-  await expirePending(pool);
-
   const [
     [users],
     [stores],
@@ -388,6 +415,7 @@ module.exports = {
   SCHEMA,
   hydrate,
   expirePending,
+  didChange,
   mapUser,
   mapStore,
   mapCoach,

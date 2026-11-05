@@ -10,9 +10,31 @@ function ymd(d) {
   return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 }
 
+function shanghaiParts(d) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(d || new Date());
+  function get(type) {
+    const p = parts.find(function (x) {
+      return x.type === type;
+    });
+    return p ? p.value : '';
+  }
+  return {
+    date: get('year') + '-' + get('month') + '-' + get('day'),
+    hm: get('hour') + ':' + get('minute')
+  };
+}
+
 function today() {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const bits = shanghaiParts().date.split('-').map(Number);
+  return new Date(bits[0], bits[1] - 1, bits[2]);
 }
 
 function addDays(d, n) {
@@ -25,12 +47,19 @@ function offsetDate(offset) {
 
 function isPastStart(date, start) {
   if (!date || !start) return false;
-  const now = new Date();
-  const todayStr = ymd(now);
+  const now = shanghaiParts();
   const day = String(date);
-  if (day < todayStr) return true;
-  if (day > todayStr) return false;
-  return String(start) <= pad(now.getHours()) + ':' + pad(now.getMinutes());
+  if (day < now.date) return true;
+  if (day > now.date) return false;
+  return String(start) <= now.hm;
+}
+
+function shanghaiMillis(date, hm) {
+  if (!date) return 0;
+  const bits = String(hm || '00:00').split(':');
+  return new Date(
+    String(date) + 'T' + pad(Number(bits[0]) || 0) + ':' + pad(Number(bits[1]) || 0) + ':00+08:00'
+  ).getTime();
 }
 
 function asArr(v) {
@@ -73,6 +102,8 @@ module.exports = {
   addDays,
   offsetDate,
   isPastStart,
+  shanghaiParts,
+  shanghaiMillis,
   asArr,
   bool,
   AppError,

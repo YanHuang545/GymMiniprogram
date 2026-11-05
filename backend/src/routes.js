@@ -1,6 +1,16 @@
 const express = require('express');
-const { hydrate, expirePending, mapOrder, mapBooking } = require('./hydrate');
-const { uid, offsetDate, AppError, asyncHandler, ymd, today, addDays, isPastStart } = require('./ids');
+const { hydrate, expirePending, didChange, mapOrder, mapBooking } = require('./hydrate');
+const {
+  uid,
+  offsetDate,
+  AppError,
+  asyncHandler,
+  ymd,
+  today,
+  addDays,
+  isPastStart,
+  shanghaiMillis
+} = require('./ids');
 
 function createRouter(pool) {
   const router = express.Router();
@@ -11,6 +21,53 @@ function createRouter(pool) {
   async function one(exec, sql, params) {
     const [rows] = await exec.execute(sql, params);
     return rows[0] || null;
+  }
+
+  async function withTxn(fn) {
+    let lastErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const conn = await pool.getConnection();
+      try {
+        await conn.beginTransaction();
+        const result = await fn(conn);
+        await conn.commit();
+        return result;
+      } catch (e) {
+        try {
+          await conn.rollback();
+        } catch (ignored) {}
+        lastErr = e;
+        if (e && e.code === 'ER_LOCK_DEADLOCK' && attempt < 2) continue;
+        throw e;
+      } finally {
+        conn.release();
+      }
+    }
+    throw lastErr;
+  }
+
+  async function occupyBooked(conn, table, id, fullMsg) {
+    const [result] = await conn.execute(
+      'UPDATE ' + table + ' SET booked = booked + 1 WHERE id = ? AND booked < capacity',
+      [id]
+    );
+    if (!didChange(result)) throw new AppError(fullMsg, 409);
+  }
+
+  async function occupyCoupon(conn, couponId, userId, price) {
+    const amount = Math.max(0, Number(price) || 0);
+    if (!couponId) return amount;
+    const c = await one(conn, 'SELECT * FROM coupons WHERE id = ? AND user_id = ? FOR UPDATE', [
+      couponId,
+      userId
+    ]);
+    if (!c || c.status !== 'unused') throw new AppError('优惠券不可用', 409);
+    if (amount < Number(c.min_amount)) return amount;
+    await conn.execute("UPDATE coupons SET status = 'used' WHERE id = ? AND user_id = ?", [
+      couponId,
+      userId
+    ]);
+    return Math.max(0, amount - Number(c.amount));
   }
 
   async function seedWelcomeCoupons(exec, userId) {
@@ -113,16 +170,6 @@ function createRouter(pool) {
       [userId]
     );
     return rows.some((b) => b.id !== ignoreId && overlaps(date, start, end, b));
-  }
-
-  async function payable(exec, ck, userId) {
-    let price = Number(ck.price) || 0;
-    if (!ck.couponId) return Math.max(0, price);
-    const c = await one(exec, 'SELECT * FROM coupons WHERE id = ? AND user_id = ?', [ck.couponId, userId]);
-    if (c && c.status === 'unused' && price >= Number(c.min_amount)) {
-      price = Math.max(0, price - Number(c.amount));
-    }
-    return price;
   }
 
   router.get(
@@ -271,9 +318,6 @@ function createRouter(pool) {
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           ['OP001', req.userId, 'P002', '周期课包 10 节', 10, 3, 70]
         );
-        await conn.execute('UPDATE sessions SET booked = seed_booked');
-        await conn.execute('UPDATE camps SET booked = seed_booked');
-        await conn.execute('UPDATE activities SET booked = seed_booked');
         await conn.execute(
           `UPDATE users SET nickname = '', phone = '', authorized = 0, notify_enabled = 0,
            current_city = '北京', current_store_id = 'ST001', seen_auth = 0 WHERE id = ?`,
@@ -291,114 +335,127 @@ function createRouter(pool) {
   );
 
   async function checkoutAction(req, res) {
-      const ck = Object.assign({}, req.query || {}, req.body || {});
-      if (ck.payType === 'times') {
-        throw new AppError('课包预约请走时段确认', 400);
-      }
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
-        await expirePending(conn);
-        await ensureUser(conn, req.userId);
+    const ck = Object.assign({}, req.body || {});
+    if (ck.payType === 'times') {
+      throw new AppError('课包预约请走时段确认', 400);
+    }
+    const out = await withTxn(async function (conn) {
+      await expirePending(conn);
+      await ensureUser(conn, req.userId);
 
-        if (ck.kind === 'group') {
-          const s = await one(conn, 'SELECT * FROM sessions WHERE id = ? FOR UPDATE', [ck.sessionId]);
-          if (!s) throw new AppError('课程不存在', 404);
-          if (Number(s.booked) >= Number(s.capacity)) throw new AppError('名额刚满', 409);
-          const dup = await one(
-            conn,
-            "SELECT id FROM bookings WHERE user_id = ? AND session_id = ? AND status = 'upcoming'",
-            [req.userId, s.id]
-          );
-          if (dup) throw new AppError('不能重复预约同一节课', 409);
-          const date = offsetDate(s.date_offset);
-          if (isPastStart(date, s.start_hm)) {
-            throw new AppError('这节课已经过期', 409);
-          }
-          if (await hasConflict(conn, req.userId, date, s.start_hm, s.end_hm)) {
-            throw new AppError('这个时间你已经有课了，先取消原来那节', 409);
-          }
-          await conn.execute('UPDATE sessions SET booked = booked + 1 WHERE id = ?', [s.id]);
-        }
-
-        if (ck.kind === 'camp') {
-          const m = await one(conn, 'SELECT * FROM camps WHERE id = ? FOR UPDATE', [ck.campId]);
-          if (!m) throw new AppError('训练营不存在', 404);
-          if (Number(m.booked) >= Number(m.capacity)) throw new AppError('已满员', 409);
-          await conn.execute('UPDATE camps SET booked = booked + 1 WHERE id = ?', [m.id]);
-        }
-
-        if (ck.kind === 'activity') {
-          const a = await one(conn, 'SELECT * FROM activities WHERE id = ? FOR UPDATE', [ck.activityId]);
-          if (!a) throw new AppError('活动不存在', 404);
-          if (a.status === 'ended') throw new AppError('已结束', 409);
-          if (Number(a.booked) >= Number(a.capacity)) throw new AppError('已满', 409);
-          await conn.execute('UPDATE activities SET booked = booked + 1 WHERE id = ?', [a.id]);
-        }
-
-        const amount = await payable(conn, ck, req.userId);
-        const id = uid('O');
-        const now = Date.now();
-        await conn.execute(
-          `INSERT INTO orders (
-             id, user_id, status, created_at, amount, refund_amount, title, when_text, place, kind,
-             session_id, package_id, camp_id, venue_id, activity_id, coach_id, act_date, start_hm, end_hm,
-             store_id, cover, duration_min, coupon_id, cancel_hours
-           ) VALUES (?, ?, 'pending_payment', ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id,
-            req.userId,
-            now,
-            amount,
-            ck.title || '',
-            ck.when || '',
-            ck.place || '',
-            ck.kind || 'group',
-            ck.sessionId || null,
-            ck.packageId || null,
-            ck.campId || null,
-            ck.venueId || null,
-            ck.activityId || null,
-            ck.coachId || null,
-            ck.date || null,
-            ck.start || null,
-            ck.end || null,
-            ck.storeId || null,
-            ck.cover || null,
-            Number(ck.durationMin) || 60,
-            ck.couponId || null,
-            Number(ck.cancelHours) || 6
-          ]
+      if (ck.kind === 'group') {
+        const s = await one(conn, 'SELECT * FROM sessions WHERE id = ? FOR UPDATE', [ck.sessionId]);
+        if (!s) throw new AppError('课程不存在', 404);
+        const existing = await one(
+          conn,
+          "SELECT * FROM orders WHERE user_id = ? AND status = 'pending_payment' AND session_id = ? FOR UPDATE",
+          [req.userId, s.id]
         );
-        await conn.execute(
-          `INSERT INTO payments (id, user_id, order_id, amount, paid_at, channel)
-           VALUES (?, ?, ?, ?, ?, 'wechat_mock')`,
-          [uid('PAY'), req.userId, id, amount, now]
+        if (existing) return { status: 200, order: existing };
+        if (Number(s.booked) >= Number(s.capacity)) throw new AppError('名额刚满', 409);
+        const dup = await one(
+          conn,
+          "SELECT id FROM bookings WHERE user_id = ? AND session_id = ? AND status = 'upcoming'",
+          [req.userId, s.id]
         );
-        await conn.commit();
-        const order = await one(conn, 'SELECT * FROM orders WHERE id = ?', [id]);
-        res.status(201).json({ ok: true, data: mapOrder(order) });
-      } catch (e) {
-        await conn.rollback();
-        throw e;
-      } finally {
-        conn.release();
+        if (dup) throw new AppError('不能重复预约同一节课', 409);
+        const date = offsetDate(s.date_offset);
+        if (isPastStart(date, s.start_hm)) {
+          throw new AppError('这节课已经过期', 409);
+        }
+        if (await hasConflict(conn, req.userId, date, s.start_hm, s.end_hm)) {
+          throw new AppError('这个时间你已经有课了，先取消原来那节', 409);
+        }
+        ck.date = ck.date || date;
+        ck.start = ck.start || s.start_hm;
+        ck.end = ck.end || s.end_hm;
+        await occupyBooked(conn, 'sessions', s.id, '名额刚满');
       }
+
+      if (ck.kind === 'camp') {
+        const m = await one(conn, 'SELECT * FROM camps WHERE id = ? FOR UPDATE', [ck.campId]);
+        if (!m) throw new AppError('训练营不存在', 404);
+        const existing = await one(
+          conn,
+          "SELECT * FROM orders WHERE user_id = ? AND status = 'pending_payment' AND camp_id = ? FOR UPDATE",
+          [req.userId, m.id]
+        );
+        if (existing) return { status: 200, order: existing };
+        if (Number(m.booked) >= Number(m.capacity)) throw new AppError('已满员', 409);
+        await occupyBooked(conn, 'camps', m.id, '已满员');
+      }
+
+      if (ck.kind === 'activity') {
+        const a = await one(conn, 'SELECT * FROM activities WHERE id = ? FOR UPDATE', [ck.activityId]);
+        if (!a) throw new AppError('活动不存在', 404);
+        const existing = await one(
+          conn,
+          "SELECT * FROM orders WHERE user_id = ? AND status = 'pending_payment' AND activity_id = ? FOR UPDATE",
+          [req.userId, a.id]
+        );
+        if (existing) return { status: 200, order: existing };
+        if (a.status === 'ended') throw new AppError('已结束', 409);
+        if (Number(a.booked) >= Number(a.capacity)) throw new AppError('已满', 409);
+        await occupyBooked(conn, 'activities', a.id, '已满');
+      }
+
+      const amount = await occupyCoupon(conn, ck.couponId, req.userId, ck.price);
+      const id = uid('O');
+      const now = Date.now();
+      await conn.execute(
+        `INSERT INTO orders (
+           id, user_id, status, created_at, amount, refund_amount, title, when_text, place, kind,
+           session_id, package_id, camp_id, venue_id, activity_id, coach_id, act_date, start_hm, end_hm,
+           store_id, cover, duration_min, coupon_id, cancel_hours
+         ) VALUES (?, ?, 'pending_payment', ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          req.userId,
+          now,
+          amount,
+          ck.title || '',
+          ck.when || '',
+          ck.place || '',
+          ck.kind || 'group',
+          ck.sessionId || null,
+          ck.packageId || null,
+          ck.campId || null,
+          ck.venueId || null,
+          ck.activityId || null,
+          ck.coachId || null,
+          ck.date || null,
+          ck.start || null,
+          ck.end || null,
+          ck.storeId || null,
+          ck.cover || null,
+          Number(ck.durationMin) || 60,
+          ck.couponId || null,
+          Number(ck.cancelHours) || 6
+        ]
+      );
+      await conn.execute(
+        `INSERT INTO payments (id, user_id, order_id, amount, paid_at, channel)
+         VALUES (?, ?, ?, ?, ?, 'wechat_mock')`,
+        [uid('PAY'), req.userId, id, amount, now]
+      );
+      const order = await one(conn, 'SELECT * FROM orders WHERE id = ?', [id]);
+      return { status: 201, order: order };
+    });
+    res.status(out.status).json({ ok: true, data: mapOrder(out.order) });
   }
 
   router.post('/checkout', asyncHandler(checkoutAction));
-  router.get('/checkout', asyncHandler(checkoutAction));
 
   async function payAction(req, res) {
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
-        const order = await one(conn, 'SELECT * FROM orders WHERE id = ? AND user_id = ? FOR UPDATE', [
-          req.params.id,
-          req.userId
-        ]);
-        if (!order) throw new AppError('订单不存在', 404);
-        if (order.status !== 'pending_payment') throw new AppError('订单状态不可支付', 409);
+    const out = await withTxn(async function (conn) {
+      await expirePending(conn);
+      const order = await one(conn, 'SELECT * FROM orders WHERE id = ? AND user_id = ? FOR UPDATE', [
+        req.params.id,
+        req.userId
+      ]);
+      if (!order) throw new AppError('订单不存在', 404);
+      if (order.status === 'paid') return order;
+      if (order.status !== 'pending_payment') throw new AppError('订单状态不可支付', 409);
         await conn.execute("UPDATE orders SET status = 'paid' WHERE id = ?", [order.id]);
         if (order.coupon_id) {
           await conn.execute("UPDATE coupons SET status = 'used' WHERE id = ? AND user_id = ?", [
@@ -491,19 +548,28 @@ function createRouter(pool) {
             );
           }
         }
-        await conn.commit();
         const fresh = await one(conn, 'SELECT * FROM orders WHERE id = ?', [order.id]);
-        res.json({ ok: true, data: mapOrder(fresh) });
-      } catch (e) {
-        await conn.rollback();
-        throw e;
-      } finally {
-        conn.release();
-      }
+        return fresh;
+    });
+    res.json({ ok: true, data: mapOrder(out) });
   }
 
   router.post('/orders/:id/pay', asyncHandler(payAction));
-  router.get('/orders/:id/pay', asyncHandler(payAction));
+  router.get(
+    '/orders/:id/pay',
+    asyncHandler(async (req, res) => {
+      const order = await one(pool, 'SELECT * FROM orders WHERE id = ? AND user_id = ?', [
+        req.params.id,
+        req.userId
+      ]);
+      if (!order) throw new AppError('订单不存在', 404);
+      if (order.status === 'paid') {
+        res.json({ ok: true, data: mapOrder(order) });
+        return;
+      }
+      throw new AppError('订单状态不可支付', 409);
+    })
+  );
 
   router.post(
     '/slots/confirm',
@@ -516,12 +582,16 @@ function createRouter(pool) {
       if (isPastStart(date, start)) throw new AppError('这节课已经过期', 409);
       const hour = Number(String(start).split(':')[0]);
       const end = String(hour + 1).padStart(2, '0') + ':00';
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
-        const coach = await one(conn, 'SELECT * FROM coaches WHERE id = ?', [coachId]);
+      const out = await withTxn(async function (conn) {
+        await expirePending(conn);
+        const coach = await one(conn, 'SELECT * FROM coaches WHERE id = ? FOR UPDATE', [coachId]);
         if (!coach) throw new AppError('教练不存在', 404);
         const store = await one(conn, 'SELECT * FROM stores WHERE id = ?', [coach.store_id]);
+        const taken = await one(
+          conn,
+          "SELECT id FROM bookings WHERE coach_id = ? AND act_date = ? AND start_hm = ? AND status = 'upcoming'",
+          [coachId, date, start]
+        );
 
         if (body.rescheduleId) {
           const old = await one(conn, 'SELECT * FROM bookings WHERE id = ? AND user_id = ? FOR UPDATE', [
@@ -529,6 +599,7 @@ function createRouter(pool) {
             req.userId
           ]);
           if (!old) throw new AppError('预约不存在', 404);
+          if (taken && taken.id !== old.id) throw new AppError('该时段已被预约', 409);
           if (await hasConflict(conn, req.userId, date, start, end, old.id)) {
             throw new AppError('这个时间你已经有课了', 409);
           }
@@ -536,19 +607,18 @@ function createRouter(pool) {
             'UPDATE bookings SET act_date = ?, start_hm = ?, end_hm = ? WHERE id = ?',
             [date, start, end, old.id]
           );
-          await conn.commit();
           const fresh = await one(conn, 'SELECT * FROM bookings WHERE id = ?', [old.id]);
-          res.json({ ok: true, data: { type: 'reschedule', booking: mapBooking(fresh) } });
-          return;
+          return { type: 'reschedule', booking: mapBooking(fresh) };
         }
 
+        if (taken) throw new AppError('该时段已被预约', 409);
         if (await hasConflict(conn, req.userId, date, start, end)) {
           throw new AppError('这个时间你已经有课了', 409);
         }
         const pack = await one(
           conn,
-          'SELECT * FROM owned_packages WHERE user_id = ? AND remain > 0 ORDER BY id LIMIT 1 FOR UPDATE',
-          [req.userId]
+          'SELECT * FROM owned_packages WHERE user_id = ? AND remain > 0 AND (expire_date IS NULL OR expire_date >= ?) ORDER BY id LIMIT 1 FOR UPDATE',
+          [req.userId, ymd(today())]
         );
         if (!pack) throw new AppError('需要先买课包', 409);
         await conn.execute('UPDATE owned_packages SET remain = remain - 1 WHERE id = ?', [pack.id]);
@@ -609,33 +679,35 @@ function createRouter(pool) {
             [uid('BK'), req.userId, now, orderId, title, date, start, end, coach.store_id, coach.id, coach.avatar]
           );
         }
-        await conn.commit();
         const order = await one(conn, 'SELECT * FROM orders WHERE id = ?', [orderId]);
-        res.json({ ok: true, data: { type: 'book', order: mapOrder(order) } });
-      } catch (e) {
-        await conn.rollback();
-        throw e;
-      } finally {
-        conn.release();
-      }
+        return { type: 'book', order: mapOrder(order) };
+      });
+      res.json({ ok: true, data: out });
     })
   );
 
   router.post(
     '/bookings/:id/cancel',
     asyncHandler(async (req, res) => {
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
+      const out = await withTxn(async function (conn) {
+        await expirePending(conn);
+        const peek = await one(conn, 'SELECT * FROM bookings WHERE id = ? AND user_id = ?', [
+          req.params.id,
+          req.userId
+        ]);
+        if (!peek) throw new AppError('预约不存在', 404);
+        if (peek.session_id) {
+          await one(conn, 'SELECT * FROM sessions WHERE id = ? FOR UPDATE', [peek.session_id]);
+        }
         const b = await one(conn, 'SELECT * FROM bookings WHERE id = ? AND user_id = ? FOR UPDATE', [
           req.params.id,
           req.userId
         ]);
         if (!b) throw new AppError('预约不存在', 404);
         if (b.status !== 'upcoming') throw new AppError('当前状态不可取消', 409);
-        const startAt = new Date(String(b.act_date) + 'T' + String(b.start_hm || '00:00') + ':00');
+        const startAt = shanghaiMillis(b.act_date, b.start_hm);
         const hours = Number(b.cancel_hours) || 6;
-        if (startAt.getTime() - Date.now() < hours * 3600000) {
+        if (startAt - Date.now() < hours * 3600000) {
           throw new AppError('已过取消时限', 409);
         }
         await conn.execute("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [b.id]);
@@ -656,40 +728,34 @@ function createRouter(pool) {
           const o = await one(conn, 'SELECT * FROM orders WHERE id = ? FOR UPDATE', [b.order_id]);
           if (o && Number(o.amount) > 0) {
             await conn.execute(
-              "UPDATE orders SET status = 'refunding', refund_amount = amount WHERE id = ?",
+              "UPDATE orders SET status = 'refunded', refund_amount = amount WHERE id = ?",
               [o.id]
             );
-            const orderId = o.id;
-            setTimeout(() => {
-              pool
-                .execute("UPDATE orders SET status = 'refunded' WHERE id = ? AND status = 'refunding'", [orderId])
-                .catch((err) => console.error('refund finalize failed', err.message));
-            }, 1200);
           }
         }
-        await conn.commit();
-        res.json({ ok: true, data: { id: b.id, status: 'cancelled' } });
-      } catch (e) {
-        await conn.rollback();
-        throw e;
-      } finally {
-        conn.release();
-      }
+        return { id: b.id, status: 'cancelled' };
+      });
+      res.json({ ok: true, data: out });
     })
   );
 
   router.post(
     '/activities/:id/join-free',
     asyncHandler(async (req, res) => {
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
+      const out = await withTxn(async function (conn) {
+        await expirePending(conn);
         const a = await one(conn, 'SELECT * FROM activities WHERE id = ? FOR UPDATE', [req.params.id]);
         if (!a) throw new AppError('活动不存在', 404);
         if (a.status === 'ended') throw new AppError('已结束', 409);
-        if (Number(a.booked) >= Number(a.capacity)) throw new AppError('已满', 409);
         if (a.paid) throw new AppError('该活动需要支付报名', 400);
-        await conn.execute('UPDATE activities SET booked = booked + 1 WHERE id = ?', [a.id]);
+        const dup = await one(
+          conn,
+          "SELECT id FROM bookings WHERE user_id = ? AND activity_id = ? AND status = 'upcoming'",
+          [req.userId, a.id]
+        );
+        if (dup) throw new AppError('已经报名过这个活动', 409);
+        if (Number(a.booked) >= Number(a.capacity)) throw new AppError('已满', 409);
+        await occupyBooked(conn, 'activities', a.id, '已满');
         const bookingId = uid('BK');
         await conn.execute(
           `INSERT INTO bookings (
@@ -697,14 +763,9 @@ function createRouter(pool) {
            ) VALUES (?, ?, 'upcoming', ?, 60, 'activity', ?, ?, ?, ?, ?)`,
           [bookingId, req.userId, Date.now(), a.name, a.act_date, a.store_id, a.id, a.cover]
         );
-        await conn.commit();
-        res.json({ ok: true, data: { id: bookingId } });
-      } catch (e) {
-        await conn.rollback();
-        throw e;
-      } finally {
-        conn.release();
-      }
+        return { id: bookingId };
+      });
+      res.json({ ok: true, data: out });
     })
   );
 

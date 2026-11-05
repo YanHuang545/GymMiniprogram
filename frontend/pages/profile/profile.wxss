@@ -22,6 +22,41 @@
   margin-bottom: 20px;
 }
 
+.login-ava-btn {
+  display: block;
+  width: 88px !important;
+  min-width: 88px;
+  max-width: 88px;
+  height: 88px;
+  padding: 0 !important;
+  margin: 0 auto 16px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none;
+  line-height: 0;
+}
+
+.login-ava-btn::after {
+  display: none;
+}
+
+.login-ava-btn .login-ava {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: block;
+}
+
+.login-ava-hint {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: #b07a5e;
+  margin-bottom: 16px;
+}
+
 .wx-nick {
   width: 100%;
   height: 44px;
@@ -44,37 +79,74 @@
   font-weight: 650;
 }
 
-.pf-ava-btn {
-  width: 56px !important;
-  min-width: 56px;
-  max-width: 56px;
-  height: 56px;
+.pf-ava-wrap {
+  position: relative;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(36, 24, 18, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 244, 236, 0.45);
+}
+
+.pf-ava-wrap .pf-ava {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: block;
+}
+
+.pf-ava-hit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px !important;
+  min-width: 64px;
+  max-width: 64px;
+  height: 64px;
+  padding: 0 !important;
+  margin: 0;
+  opacity: 0;
+  border: none;
+  background: transparent !important;
+}
+
+.pf-ava-hit::after {
+  display: none;
+}
+
+.pf-name-input {
+  width: 100%;
+  height: 24px;
+  min-height: 24px;
   padding: 0;
   margin: 0;
-  overflow: hidden;
-  border-radius: 50%;
-  flex: none;
   background: transparent;
-  border: none;
-  line-height: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
 }
 
-.profile-hero .pf-ava-btn .pf-ava,
-.pf-ava-btn .pf-ava {
-  width: 56px;
-  height: 56px;
-  border: none;
-  border-radius: 50%;
+.pf-name-ph {
+  color: rgba(255, 244, 236, 0.45);
+  font-weight: 500;
 }
 
-.logout-card {
-  margin: 12px 16px 24px;
-  padding: 14px;
-  text-align: center;
+.logout-btn {
+  margin: 24px 16px 8px;
+  height: 48px;
+  border-radius: 12px;
+  background: #241812;
+  border: 1px solid #3d241c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.logout-text {
-  color: #e24c4c;
-  font-size: 15px;
-  font-weight: 650;
+.logout-btn-text {
+  color: #e64340;
+  font-size: 16px;
+  font-weight: 500;
 }

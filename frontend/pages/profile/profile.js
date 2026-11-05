@@ -12,10 +12,8 @@ Page({
     capsulePad: 96,
     loggedIn: false,
     avatar: '',
-    name: '微信登录',
+    name: '',
     loginAvatar: wechat.DEFAULT_AVATAR,
-    loginNeedNick: false,
-    needWxName: false,
     pkg: 0,
     coupon: 0,
     trainText: '',
@@ -36,14 +34,11 @@ Page({
     var d = getApp().getData();
     var st = store.trainStats(d);
     var loggedIn = wechat.isAppLoggedIn(d);
-    var wxName = wechat.realNickname(d.user && d.user.nickname);
     this.setData({
       loggedIn: loggedIn,
       avatar: d.user.avatar || store.ossUrl('avatar-user'),
-      name: loggedIn ? wechat.displayName(d.user.nickname) : '微信登录',
-      loginAvatar: this.data.loginAvatar || d.user.avatar || wechat.DEFAULT_AVATAR,
-      loginNeedNick: loggedIn ? false : this.data.loginNeedNick,
-      needWxName: loggedIn && !wxName,
+      name: loggedIn ? wechat.realNickname(d.user.nickname) : '',
+      loginAvatar: d.user.avatar || wechat.DEFAULT_AVATAR,
       pkg: store.remainingPkg(d),
       coupon: store.unusedCoupons(d).length,
       trainText: '训练记录：累计 ' + st.times + ' 次 · ' + st.days + ' 天 · ' + st.hours + ' 小时'
@@ -74,19 +69,7 @@ Page({
     this.setData({ loginAvatar: url, avatar: url });
     var full = getApp().globalData.serverData || getApp().getData();
     var nickname = wechat.realNickname(full.user && full.user.nickname);
-    if (!nickname) {
-      this.setData({ loginNeedNick: true });
-      return;
-    }
     this.finishLogin(nickname, url);
-  },
-  onNickLogin: function (e) {
-    var nickname = wechat.realNickname(e.detail && e.detail.value && e.detail.value.nickname);
-    if (!nickname) {
-      util.toast('请点输入框选择微信昵称');
-      return;
-    }
-    this.finishLogin(nickname, this.data.loginAvatar || this.data.avatar);
   },
   finishLogin: function (nickname, url) {
     var that = this;
@@ -94,12 +77,19 @@ Page({
     wechat.submitProfile(nickname, url).then(function () {
       util.hideBusy();
       util.toast('微信登录成功');
-      that.setData({ loginNeedNick: false });
       that.refresh();
     }).catch(function (err) {
       util.hideBusy();
       biz.failToast(err);
     });
+  },
+  onHeroNick: function (e) {
+    var nickname = wechat.realNickname((e.detail && (e.detail.nickname || e.detail.value)) || '');
+    if (!nickname) return;
+    var that = this;
+    wechat.submitProfile(nickname, this.data.avatar).then(function () {
+      that.refresh();
+    }).catch(biz.failToast);
   },
   goPath: function (e) {
     nav.go(e.currentTarget.dataset.path);

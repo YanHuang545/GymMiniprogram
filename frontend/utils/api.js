@@ -169,28 +169,34 @@ function ensurePhotos() {
 }
 
 function request(method, path, data) {
-  if (isDevtools()) {
-    return requestXhr(method, HTTP_PUBLIC + path, data);
-  }
   var app = null;
   try {
     app = getApp();
   } catch (e) {}
   var wait = app && app.prepareCloud ? app.prepareCloud() : Promise.resolve(false);
   return wait.then(function (ok) {
-    if (!ok && !cloudReady()) {
-      return Promise.reject(new Error('云开发未初始化'));
+    if (ok || cloudReady()) {
+      var photos = isDevtools() ? Promise.resolve() : ensurePhotos();
+      return requestCloud(method, path, data).then(
+        function (body) {
+          return photos.then(function () {
+            return rewritePublicUrls(body);
+          });
+        },
+        function (err) {
+          if (isDevtools()) {
+            return requestXhr(method, HTTP_PUBLIC + path, data);
+          }
+          return photos.then(function () {
+            return Promise.reject(err);
+          });
+        }
+      );
     }
-    var photos = ensurePhotos();
-    return requestCloud(method, path, data).then(function (body) {
-      return photos.then(function () {
-        return rewritePublicUrls(body);
-      });
-    }, function (err) {
-      return photos.then(function () {
-        return Promise.reject(err);
-      });
-    });
+    if (isDevtools()) {
+      return requestXhr(method, HTTP_PUBLIC + path, data);
+    }
+    return Promise.reject(new Error('云开发未初始化'));
   });
 }
 
