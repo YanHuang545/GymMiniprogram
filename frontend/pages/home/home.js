@@ -5,6 +5,14 @@ var biz = require('../../utils/biz.js');
 var share = require('../../utils/share.js');
 var pull = require('../../utils/refresh.js');
 
+function sameBanners(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!b[i] || a[i].id !== b[i].id || a[i].image !== b[i].image) return false;
+  }
+  return true;
+}
+
 Page({
   data: {
     navBarHeight: 64,
@@ -17,6 +25,7 @@ Page({
     currentStoreId: '',
     banners: [],
     bannerIndex: 0,
+    bannerReady: false,
     nearStore: null,
     hotSessions: [],
     homeAct: null,
@@ -57,18 +66,36 @@ Page({
       return Object.assign({}, s, { priceText: util.money(s.price) });
     });
     var act = d.activities[0];
-    this.setData({
+    var patch = {
       locText: (d.user.currentCity || '北京') + ' · ' + (st ? st.name : '选择门店'),
       ddCity: ddCity,
       cities: cities,
       ddStores: ddStores,
       currentStoreId: d.user.currentStoreId,
-      banners: d.banners,
-      bannerIndex: getApp().globalData.ui.bannerIndex || 0,
       nearStore: st ? Object.assign({}, st, { closeHour: (st.hours || '').split('-')[1] || '' }) : null,
       hotSessions: hot,
       homeAct: act ? Object.assign({}, act, { statusText: store.labelOf(act.status) }) : null
-    });
+    };
+    if (!sameBanners(this.data.banners, d.banners)) {
+      patch.banners = d.banners || [];
+      patch.bannerIndex = 0;
+      patch.bannerReady = false;
+    }
+    this.setData(patch);
+    this.armBannerReady();
+  },
+
+  armBannerReady: function () {
+    var that = this;
+    if (that.data.bannerReady) return;
+    if (!(that.data.banners || []).length) return;
+    clearTimeout(that._bannerReadyTimer);
+    that._bannerReadyTimer = setTimeout(function () {
+      if (that.data.bannerReady) return;
+      if ((that.data.banners || []).length) {
+        that.setData({ bannerReady: true });
+      }
+    }, 600);
   },
 
   onPageTap: function () {
@@ -107,7 +134,10 @@ Page({
   },
 
   onBannerChange: function (e) {
+    var src = (e.detail && e.detail.source) || '';
+    if (src !== 'autoplay' && src !== 'touch') return;
     var i = e.detail.current;
+    if (typeof i !== 'number' || i === this.data.bannerIndex) return;
     getApp().globalData.ui.bannerIndex = i;
     this.setData({ bannerIndex: i });
   },

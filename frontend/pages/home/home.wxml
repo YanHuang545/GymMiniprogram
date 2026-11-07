@@ -35,22 +35,33 @@
       </view>
     </view>
 
-    <swiper
-      class="home-swiper"
-      autoplay
-      circular
-      interval="4000"
-      current="{{bannerIndex}}"
-      bindchange="onBannerChange"
-    >
-      <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-link="{{item.link}}">
-        <image class="swiper-img" src="{{item.image}}" mode="aspectFill" binderror="onImgError" data-fb="{{item.fb}}"></image>
+    <view class="home-swiper" wx:if="{{banners.length}}">
+      <swiper
+        wx:if="{{bannerReady}}"
+        class="home-swiper-core"
+        autoplay="{{banners.length > 1}}"
+        circular="{{banners.length > 1}}"
+        interval="4000"
+        duration="500"
+        easing-function="easeOutCubic"
+        bindchange="onBannerChange"
+      >
+        <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-link="{{item.link}}">
+          <image class="swiper-img" src="{{item.image}}" mode="aspectFill" binderror="onImgError" data-fb="{{item.fb}}"></image>
+          <view class="swiper-cap">
+            <text>{{item.title}}</text>
+            <text class="swiper-sub">{{item.sub}}</text>
+          </view>
+        </swiper-item>
+      </swiper>
+      <block wx:else>
+        <image class="swiper-img" src="{{banners[0].image}}" mode="aspectFill" binderror="onImgError" data-fb="{{banners[0].fb}}" bindtap="onBannerTap" data-link="{{banners[0].link}}"></image>
         <view class="swiper-cap">
-          <text>{{item.title}}</text>
-          <text class="swiper-sub">{{item.sub}}</text>
+          <text>{{banners[0].title}}</text>
+          <text class="swiper-sub">{{banners[0].sub}}</text>
         </view>
-      </swiper-item>
-    </swiper>
+      </block>
+    </view>
     <view class="dots">
       <view wx:for="{{banners}}" wx:key="id" class="dot {{index === bannerIndex ? 'is-on' : ''}}"></view>
     </view>

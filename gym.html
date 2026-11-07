@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>燃练</title>
+  <style>
+    :root {
+      --rpx: calc(100vw / 750);
+      --c-primary: #ff4a1a;
+      --c-primary-2: #ff8a2a;
+      --c-price: #ff6a33;
+      --c-bg: #16100d;
+      --c-surface: #241812;
+      --c-text: #fff4ec;
+      --c-text-2: #e2b89a;
+      --c-text-3: #b07a5e;
+      --c-line: #3d241c;
+      --c-chip: #331c16;
+      --c-orange-bg: #3a160e;
+      --nav-h: 64px;
+      --status-h: 20px;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    html, body, #app {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background:
+        radial-gradient(1100px 520px at 12% -8%, rgba(255, 72, 18, .42), transparent 58%),
+        radial-gradient(900px 420px at 92% 6%, rgba(255, 140, 40, .22), transparent 55%),
+        var(--c-bg);
+      color: var(--c-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      font-size: 15px;
+    }
+    #app { width: 100%; position: relative; }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { border: 0; background: none; padding: 0; margin: 0; }
+    img { display: block; object-fit: cover; }
+    .page {
+      display: none;
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-top: var(--nav-h);
+    }
+    .page.is-on { display: block; }
+    .page.home-bg {
+      background: radial-gradient(980px 420px at 18% -12%, rgba(255, 70, 16, .5), transparent 62%);
+    }
+    .tab-pad { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .cta-pad { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+    .hd {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      height: var(--nav-h); padding-top: var(--status-h);
+      background: #241812; border-bottom: 1px solid #3d241c;
+    }
+    .hd-inner { height: 44px; display: flex; align-items: center; }
+    .hd-left, .hd-right { width: 72px; flex: none; }
+    .hd-title { flex: 1; min-width: 0; text-align: center; font-size: 16px; font-weight: 650; line-height: 44px; color: #fff4ec; }
+    .icon-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    .ico { display: inline-block; flex: none; vertical-align: middle; }
+    .tab-bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      height: 56px; padding-bottom: env(safe-area-inset-bottom);
+      box-sizing: content-box; background: #241812; border-top: 1px solid #3d241c;
+      display: none;
+    }
+    .tab-bar.is-on { display: flex; }
+    .tab-item { flex: 1; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #8a6a58; }
+    .tab-item.is-on { color: #ff4a1a; font-weight: 650; }
+    .tab-txt { font-size: 10px; line-height: 1.2; }
+    .card { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.38); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 14px; border-radius: 12px; font-size: 13px; font-weight: 650; }
+    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary)); box-shadow: 0 3px 8px rgba(255,95,61,.35); }
+    .btn-ghost { background: transparent; border: 1px solid var(--c-line); color: var(--c-text-2); }
+    .btn-disabled { background: #3a241c; color: #8a5a48; pointer-events: none; box-shadow: none; }
+    .btn-lg { min-height: 44px; padding: 0 22px; font-size: 15px; }
+    .btn-block { width: calc(100% - 32px); margin: 0 16px; display: flex; }
+    .price { color: var(--c-price); font-weight: 800; }
+    .origin { color: #8a6a58; text-decoration: line-through; font-size: 12px; font-weight: 400; }
+    .tag { display: inline-block; font-size: 11px; color: var(--c-text-3); background: var(--c-chip); border-radius: 6px; padding: 2px 6px; margin-right: 4px; }
+    .tag-orange { color: var(--c-primary); background: var(--c-orange-bg); }
+    .muted { color: var(--c-text-3); font-size: 12px; }
+    .pad { padding: 12px 16px; }
+    .sec-h { display: flex; align-items: center; justify-content: space-between; font-size: 16px; font-weight: 700; padding: 16px 16px 8px; }
+    .sec-h .more { font-size: 13px; font-weight: 400; color: var(--c-text-3); display: inline-flex; align-items: center; gap: 2px; }
+    .home-loc { display: flex; align-items: center; gap: 6px; padding: 10px 96px 0 16px; font-weight: 650; }
+    .home-loc-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .store-dd { display: none; position: absolute; z-index: 50; left: 12px; right: 12px; top: 46px; background: var(--c-surface); border: 1px solid var(--c-line); border-top: 2px solid var(--c-primary); border-radius: 14px; box-shadow: 0 16px 40px rgba(255,70,16,.22); max-height: 68vh; overflow: auto; padding: 10px 0 8px; }
+    .store-dd.is-on { display: block; }
+    .home-loc-wrap { position: relative; z-index: 16; }
+    .chip { display: inline-flex; align-items: center; height: 30px; padding: 0 10px; border-radius: 16px; background: var(--c-chip); color: var(--c-text-2); font-size: 12px; margin-right: 8px; border: 1px solid transparent; }
+    .chip.is-on { color: #fff; background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary)); }
+    .dd-cities { display: flex; gap: 8px; padding: 4px 12px 10px; overflow-x: auto; }
+    .store-dd-item { display: flex; margin: 0 12px; padding: 10px; gap: 10px; align-items: center; border-radius: 10px; min-width: 0; }
+    .store-dd-item.is-on { background: var(--c-orange-bg); }
+    .store-dd-item img { width: 48px; height: 48px; border-radius: 8px; flex: none; }
+    .swiper { position: relative; margin: 12px 16px 0; height: 172px; border-radius: 12px; overflow: hidden; background: #2a1610; }
+    .swiper-track { display: flex; height: 100%; transition: transform .35s ease; }
+    .swiper-item { position: relative; min-width: 100%; height: 100%; }
+    .swiper-item img { width: 100%; height: 100%; }
+    .swiper-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 14px 12px; background: linear-gradient(transparent, rgba(0,0,0,.55)); font-weight: 700; }
+    .swiper-sub { display: block; font-size: 12px; font-weight: 400; opacity: .9; margin-top: 2px; }
+    .dots { display: flex; justify-content: center; gap: 4px; margin-top: 8px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #5a3228; }
+    .dot.is-on { width: 14px; border-radius: 4px; background: var(--c-primary); }
+    .entry-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; padding: 16px 16px 4px; }
+    .entry { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .entry-ico { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .entry-label { font-size: 12px; color: var(--c-text-2); }
+    .e1 { background: linear-gradient(135deg,#ff8a2a,#ff3b12); }
+    .e2 { background: linear-gradient(135deg,#ff6a3d,#c41d1d); }
+    .e3 { background: linear-gradient(135deg,#ffb347,#ff5a1f); }
+    .e4 { background: linear-gradient(135deg,#ff7a45,#d63a12); }
+    .store-card { display: flex; gap: 12px; align-items: center; margin: 0 16px; padding: 10px; min-width: 0; }
+    .store-card img { width: 72px; height: 72px; border-radius: 8px; flex: none; }
+    .store-card .main, .session-card .mid, .pkg-row .main, .list-row .left { flex: 1; min-width: 0; }
+    .h-scroll { display: flex; overflow-x: auto; padding: 0 16px 4px; height: 176px; }
+    .class-hcard { flex: none; width: 148px; margin-right: 10px; overflow: hidden; }
+    .class-hcard img { width: 148px; height: 96px; }
+    .class-hcard .meta { padding: 8px 10px 10px; }
+    .meta-title, .mid-title { font-size: 15px; font-weight: 700; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .act-banner { margin: 0 16px 8px; overflow: hidden; position: relative; }
+    .act-banner img { width: 100%; height: 168px; }
+    .act-banner .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 20px 12px 12px; background: linear-gradient(transparent, rgba(0,0,0,.78)); font-weight: 700; }
+    .seg { display: flex; background: #241812; border-bottom: 1px solid #3d241c; }
+    .seg-btn { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; color: #b07a5e; position: relative; }
+    .seg-btn.is-on { color: #ff4a1a; font-weight: 650; }
+    .seg-btn.is-on::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: 0; height: 2px; background: #ff4a1a; }
+    .date-strip { display: flex; overflow-x: auto; padding: 8px 12px; gap: 8px; }
+    .date-chip { flex: none; width: 52px; padding: 8px 0; border-radius: 10px; text-align: center; background: var(--c-chip); color: var(--c-text-3); font-size: 11px; }
+    .date-chip .d-num { display: block; font-size: 16px; font-weight: 700; color: var(--c-text); }
+    .date-chip.is-on { background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary)); color: #fff; }
+    .date-chip.is-on .d-num { color: #fff; }
+    .filter-row { display: flex; overflow-x: auto; padding: 6px 16px 8px; }
+    .group-h { padding: 12px 16px 4px; font-size: 13px; color: var(--c-text-3); }
+    .session-card { display: flex; gap: 10px; align-items: center; margin: 8px 16px; padding: 10px; min-width: 0; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; background: #3a241c; }
+    .session-card .right { text-align: right; flex: none; }
+    .cover-wrap { width: 100%; height: 211px; overflow: hidden; background: #2a1610; }
+    .cover-wrap img { width: 100%; height: 100%; }
+    .kv { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 12px 16px; }
+    .kv-cell { background: var(--c-surface); border-radius: 8px; padding: 10px 8px; text-align: center; min-width: 0; }
+    .kv-b { display: block; font-size: 14px; font-weight: 700; }
+    .kv-s { font-size: 11px; color: var(--c-text-3); }
+    .info-card { margin: 8px 16px; padding: 12px; font-size: 13px; color: var(--c-text-2); line-height: 1.8; white-space: pre-wrap; }
+    .rule-card { margin: 8px 16px; padding: 12px; font-size: 13px; color: #ffb089; background: var(--c-orange-bg); border: 1px solid #5a2418; line-height: 1.7; white-space: pre-wrap; }
+    .article { padding: 8px 16px 16px; font-size: 14px; color: var(--c-text-2); line-height: 1.8; }
+    .sticky-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--c-surface); border-top: 1px solid var(--c-line); }
+    .list-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--c-line); font-size: 15px; min-width: 0; }
+    .list-row .left { display: flex; align-items: center; gap: 10px; }
+    .row-val { text-align: right; min-width: 0; }
+    .detail-title { font-size: 20px; font-weight: 700; }
+    .profile-hero { margin: 12px 16px 0; padding: 16px; border-radius: 12px; color: #fff; background: linear-gradient(120deg, #ff8a2a 0%, #ff3b12 70%); display: flex; align-items: center; gap: 12px; }
+    .pf-ava { width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,244,236,.45); }
+    .pf-name { font-size: 18px; font-weight: 700; display: block; }
+    .wx-login-card { margin: 12px 16px 0; padding: 28px 20px 24px; border-radius: 12px; background: #241812; border: 1px solid #3d241c; }
+    .wx-login-title { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .wx-login-sub { text-align: center; font-size: 13px; color: #b07a5e; margin-bottom: 20px; }
+    .wx-login-btn { width: 100%; height: 44px; line-height: 44px; border-radius: 8px; background: #07c160; color: #fff; font-size: 16px; font-weight: 650; }
+    .asset-bar { display: grid; grid-template-columns: 1fr 1fr; margin: 12px 16px 0; }
+    .asset-btn { padding: 16px 8px; text-align: center; }
+    .asset-num { display: block; font-size: 22px; color: var(--c-primary); font-weight: 700; }
+    .asset-lab { font-size: 12px; color: var(--c-text-3); }
+    .train-card { margin: 12px 16px 8px; padding: 12px 14px; font-size: 13px; color: var(--c-text-2); }
+    .menu-card { margin: 8px 16px 24px; overflow: hidden; }
+    .logout-btn { margin: 24px 16px 8px; height: 48px; border-radius: 12px; background: #241812; border: 1px solid #3d241c; display: flex; align-items: center; justify-content: center; color: #e64340; font-size: 16px; font-weight: 500; }
+    .empty { text-align: center; padding: 48px 24px; color: var(--c-text-3); font-size: 14px; }
+    .pkg-row { display: flex; gap: 10px; margin: 8px 16px; padding: 10px; min-width: 0; }
+    .pkg-row img { width: 88px; height: 66px; border-radius: 8px; flex: none; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px; }
+    .venue-card { overflow: hidden; min-width: 0; }
+    .venue-card img { width: 100%; height: 110px; }
+    .venue-card .meta { padding: 8px 10px 10px; }
+    .camp-card { margin: 8px 16px; overflow: hidden; }
+    .slot-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; padding: 12px 16px; }
+    .slot { height: 40px; border-radius: 10px; background: #331c16; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .slot.is-on { background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary)); color: #fff; }
+    .slot.is-busy { opacity: .35; pointer-events: none; }
+    .gallery { display: flex; overflow-x: auto; gap: 8px; padding: 0 16px 8px; }
+    .gallery img { width: 120px; height: 80px; border-radius: 8px; flex: none; }
+    .field { padding: 8px 16px; }
+    .field-lab { display: block; font-size: 13px; color: var(--c-text-2); margin-bottom: 6px; }
+    .field-input, .field-textarea {
+      width: 100%; height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--c-line);
+      background: #331c16; color: var(--c-text);
+    }
+    .field-textarea { height: 88px; padding: 10px 12px; resize: none; }
+    .pay-ok, .pay-fail { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+    .pay-ok { background: #3dcc86; }
+    .pay-fail { background: #e24c4c; }
+    .mask { display: none; position: fixed; inset: 0; z-index: 70; background: rgba(10,6,4,.62); }
+    .mask.is-on { display: block; }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #241812; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+    .sheet-h { text-align: center; font-weight: 700; padding: 16px 16px 12px; }
+    .toast { position: fixed; left: 50%; top: 46%; transform: translate(-50%,-50%); z-index: 90; background: rgba(20,12,10,.92); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; display: none; max-width: 80%; text-align: center; }
+    .loading { position: fixed; inset: 0; z-index: 95; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; }
+    .loading.is-on { display: flex; }
+    .loading-box { background: rgba(20,12,10,.92); color: #fff; padding: 16px 22px; border-radius: 10px; font-size: 14px; }
+    .modal { position: fixed; inset: 0; z-index: 96; background: rgba(10,6,4,.62); display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal.is-on { display: flex; }
+    .modal-box { width: 100%; max-width: 320px; background: #241812; border-radius: 12px; padding: 20px 16px 12px; }
+    .modal-title { font-size: 17px; font-weight: 700; text-align: center; }
+    .modal-body { margin: 12px 0 16px; color: var(--c-text-2); font-size: 14px; line-height: 1.6; text-align: center; }
+    .modal-acts { display: flex; gap: 8px; }
+    .modal-acts .btn { flex: 1; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="tab-bar" id="tabbar"></div>
+  <div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
+  <div class="toast" id="toast"></div>
+  <div class="loading" id="loading"><div class="loading-box" id="loadingText">请稍候</div></div>
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <div class="modal-title" id="modalTitle">提示</div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-acts">
+        <button class="btn btn-ghost" id="modalCancel">取消</button>
+        <button class="btn btn-primary" id="modalOk">确定</button>
+      </div>
+    </div>
+  </div>
+  <script>
+(function () {
+  var OSS = 'https://mashangfei1112.oss-accelerate.aliyuncs.com/gym-demo/photos/';
+  var FB = OSS + 'class-hiit.jpg';
+  function photo(n) { return OSS + n + '.jpg'; }
+  var PATHS = {
+    house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/>',
+    'calendar-days': '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/>',
+    'party-popper': '<path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+    'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+    'map-pin': '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>',
+    'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    'building-2': '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>',
+    dumbbell: '<path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'credit-card': '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>'
+  };
+  function ico(name, size, color) {
+    var inner = PATHS[name] || PATHS.sparkles;
+    return '<svg class="ico" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+  }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function today() { var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(n) { var d = today(); d.setDate(d.getDate() + n); return d; }
+  function weekLab(d) { return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]; }
+  function md(s) { var p = String(s).split('-'); return Number(p[1]) + '月' + Number(p[2]) + '日'; }
+  function yuan(n) { return '¥' + n; }
+  function find(list, id) { return (list || []).filter(function (x) { return x.id === id; })[0] || null; }
+  function uid(p) { return p + Date.now().toString(36) + Math.floor(Math.random() * 999); }
+  function img(src, cls, w, h) {
+    return '<img class="' + (cls || '') + '" src="' + src + '" alt="" width="' + (w || 100) + '" height="' + (h || 100) + '" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + FB + '\'"/>';
+  }
+
+  var LABELS = { pending_payment: '待支付', paid: '已支付', refunding: '退款中', refunded: '已退款', closed: '已关闭', upcoming: '待上课', completed: '已完成', cancelled: '已取消', group: '团课', private: '私教', camp: '训练营', venue: '甄选', activity: '活动', package: '课包', open: '报名中', ended: '已结束', unused: '未使用', used: '已使用' };
+  var COURSES = [{ id: 'all', name: '全部' }, { id: 'C001', name: '杠铃操' }, { id: 'C002', name: '搏击' }, { id: 'C003', name: '瑜伽' }, { id: 'C004', name: 'HIIT' }];
+  var TABS = [
+    { path: '/home', text: '首页', icon: 'house' },
+    { path: '/venues', text: '甄选', icon: 'sparkles' },
+    { path: '/schedule', text: '课表', icon: 'calendar-days' },
+    { path: '/activities', text: '活动', icon: 'party-popper' },
+    { path: '/profile', text: '我的', icon: 'user' }
+  ];
+
+  var CATALOG = {
+    stores: [
+      { id: 'ST001', city: '北京', name: '崇文门全能店', dist: '1.2km', hours: '07:00-22:00', phone: '010-88886666', address: '东城区崇文门外大街 18 号', cover: photo('store-chongwen'), gallery: [photo('store-chongwen'), photo('store-gallery-1'), photo('store-gallery-2')], tags: ['全能店', '可停车'] },
+      { id: 'ST002', city: '北京', name: '金宝汇店', dist: '1.7km', hours: '08:00-21:30', phone: '010-88887777', address: '东城区金宝街 88 号', cover: photo('store-jinbao'), gallery: [photo('store-jinbao'), photo('store-gallery-1')], tags: ['私教店'] },
+      { id: 'ST003', city: '上海', name: '静安寺店', dist: '2.4km', hours: '07:30-22:00', phone: '021-66668888', address: '静安区南京西路 1601 号', cover: photo('store-chongwen'), gallery: [photo('store-chongwen'), photo('class-hiit')], tags: ['全能店'] }
+    ],
+    coaches: [
+      { id: 'T001', name: '张教练', avatar: photo('coach-zhang'), title: '国家一级健身教练', skills: ['力量', '塑形'], years: 8, intro: '擅长杠铃操与体态纠正，带过多届新人训练营。', storeId: 'ST001' },
+      { id: 'T002', name: '李教练', avatar: photo('coach-li'), title: '搏击专项教练', skills: ['搏击', '燃脂'], years: 6, intro: '节奏稳、保护意识强，适合想出汗又怕受伤的人。', storeId: 'ST001' },
+      { id: 'T003', name: '王教练', avatar: photo('coach-wang'), title: '瑜伽理疗教练', skills: ['瑜伽', '拉伸'], years: 7, intro: '动作拆解细致，办公室久坐人群友好。', storeId: 'ST002' }
+    ],
+    banners: [
+      { id: 'B1', image: photo('banner-1'), title: '燃脂季 · 新课上新', sub: '限时新人特惠 ¥49 起', link: '/class?id=S001' },
+      { id: 'B2', image: photo('banner-2'), title: '私教体验课', sub: '1 节入门，教练一对一带练', link: '/package?id=P001' },
+      { id: 'B3', image: photo('banner-3'), title: '万圣节主题夜训', sub: '11月7日 · 崇文门店报名中', link: '/activity?id=A001' }
+    ],
+    sessions: [
+      { id: 'S001', courseId: 'C001', name: '塑形杠铃操', cover: photo('class-barbell'), tags: ['力量', '塑形', '新手友好'], durationMin: 60, intensity: '中', crowd: '全身塑形入门', storeId: 'ST001', coachId: 'T001', off: -1, start: '19:00', end: '20:00', price: 49, originPrice: 79, capacity: 16, booked: 10, room: '2楼操房', intro: '用轻中重量杠铃完成全身复合动作，课上有教练带节奏，新手也能跟上。' },
+      { id: 'S002', courseId: 'C002', name: '燃脂搏击', cover: photo('class-boxing'), tags: ['燃脂'], durationMin: 60, intensity: '高', crowd: '有基础或想挑战的人', storeId: 'ST001', coachId: 'T002', off: 1, start: '20:10', end: '21:10', price: 59, originPrice: 89, capacity: 12, booked: 12, room: '3楼搏击房', intro: '拳腿组合配合步伐，整节课保持中高强度，出汗明显。' },
+      { id: 'S003', courseId: 'C003', name: '活力瑜伽', cover: photo('class-yoga'), tags: ['拉伸', '放松'], durationMin: 60, intensity: '低', crowd: '久坐人群', storeId: 'ST002', coachId: 'T003', off: 1, start: '18:30', end: '19:30', price: 59, originPrice: 79, capacity: 18, booked: 4, room: '瑜伽馆', intro: '以流动体式打开胸椎与髋部，课后会有 8 分钟休息术。' },
+      { id: 'S004', courseId: 'C004', name: '燃脂 HIIT', cover: photo('class-hiit'), tags: ['燃脂', '心肺'], durationMin: 45, intensity: '高', crowd: '想快速出汗', storeId: 'ST001', coachId: 'T002', off: 2, start: '12:20', end: '13:05', price: 45, originPrice: 69, capacity: 14, booked: 3, room: '1楼功能区', intro: '20 秒练 10 秒歇的循环课，动作都有低冲击替代。' },
+      { id: 'S005', courseId: 'C001', name: '塑形杠铃操', cover: photo('class-barbell'), tags: ['力量', '塑形'], durationMin: 60, intensity: '中', crowd: '全身塑形入门', storeId: 'ST002', coachId: 'T001', off: 3, start: '19:00', end: '20:00', price: 49, originPrice: 79, capacity: 16, booked: 7, room: '操房', intro: '金宝汇店晚间场，内容和崇文门店同一套编排。' },
+      { id: 'S006', courseId: 'C003', name: '活力瑜伽', cover: photo('class-yoga'), tags: ['拉伸'], durationMin: 60, intensity: '低', crowd: '全员', storeId: 'ST001', coachId: 'T003', off: 5, start: '10:00', end: '11:00', price: 49, originPrice: 69, capacity: 16, booked: 2, room: '瑜伽馆', intro: '晨间阴瑜伽，适合恢复日。' },
+      { id: 'S007', courseId: 'C002', name: '燃脂搏击', cover: photo('class-boxing'), tags: ['燃脂'], durationMin: 60, intensity: '高', crowd: '进阶', storeId: 'ST001', coachId: 'T002', off: 6, start: '19:30', end: '20:30', price: 59, originPrice: 89, capacity: 12, booked: 5, room: '搏击房', intro: '周末进阶场，组合会稍快。' },
+      { id: 'S008', courseId: 'C004', name: '燃脂 HIIT', cover: photo('class-hiit'), tags: ['燃脂'], durationMin: 45, intensity: '高', crowd: '全员', storeId: 'ST002', coachId: 'T002', off: 8, start: '18:00', end: '18:45', price: 45, originPrice: 69, capacity: 12, booked: 1, room: '功能区', intro: '周日收尾课，带你把一周热量再推一把。' }
+    ],
+    packages: [
+      { id: 'P001', name: '私教体验课', sessions: 1, price: 199, originPrice: 299, validDays: 30, desc: '1 对 1 体验，了解动作与节奏。', cover: photo('coach-zhang') },
+      { id: 'P002', name: '周期课包 10 节', sessions: 10, price: 1680, originPrice: 1990, validDays: 90, desc: '90 天有效，适合连续塑形。', cover: photo('class-barbell') },
+      { id: 'P003', name: '精品小班课 8 节', sessions: 8, price: 1280, originPrice: 1600, validDays: 60, desc: '3-6 人小班，兼顾私教精度和团课氛围。', cover: photo('class-hiit') }
+    ],
+    camps: [
+      { id: 'M001', name: '4 周燃脂训练营', tags: ['减脂', '小班'], cover: photo('camp-fatloss'), off: 8, weeks: 4, price: 899, originPrice: 1099, capacity: 16, booked: 8, coachId: 'T002', storeId: 'ST001', schedule: '周一 / 三 / 五 19:30-20:30', intro: '四周主题：激活代谢、力量底座、有氧峰值、体态巩固。开营后不支持自行退款。' },
+      { id: 'M002', name: '体态重塑营', tags: ['塑形', '体态'], cover: photo('class-yoga'), off: 15, weeks: 6, price: 1299, originPrice: 1499, capacity: 12, booked: 2, coachId: 'T001', storeId: 'ST002', schedule: '周二 / 四 12:20-13:20', intro: '面向久坐体态，开营前开放报名。' }
+    ],
+    venues: [
+      { id: 'V001', name: '柏悦酒店恒温泳池', tags: ['恒温泳池', '星级酒店'], cover: photo('venue-pool'), dist: '2.1km', price: 159, originPrice: 220, hours: '10:00-21:00', intro: '合作酒店室内恒温泳池，含更衣室与浴巾。取消时限以本页为准：开场前 8 小时。', cancelHours: 8, address: '朝阳区东三环北路 1 号' },
+      { id: 'V002', name: '形馆普拉提', tags: ['大器械', '精品小班'], cover: photo('venue-pilates'), dist: '3.4km', price: 199, originPrice: 268, hours: '09:00-21:00', intro: '改革器小班，每班不超过 6 人。开课前 6 小时可取消。', cancelHours: 6, address: '朝阳区工体北路 8 号' }
+    ],
+    activities: [
+      { id: 'A001', name: '万圣节主题夜训', cover: photo('activity-halloween'), date: '2026-11-07', time: '19:30-21:00', storeId: 'ST001', status: 'open', paid: true, price: 39, intro: '换装夜训 + 合影，名额 40 人。可在线支付报名。', booked: 18, capacity: 40 },
+      { id: 'A002', name: '新店开业公开课', cover: photo('activity-open'), date: '2026-10-18', time: '14:00-15:00', storeId: 'ST002', status: 'ended', paid: false, price: 0, intro: '金宝汇店开业体验课，已结束。', booked: 30, capacity: 30 }
+    ]
+  };
+  CATALOG.sessions.forEach(function (s) { s.date = ymd(addDays(s.off)); });
+  CATALOG.camps.forEach(function (c) { c.startDate = ymd(addDays(c.off)); });
+
+  var S = {
+    loggedIn: true,
+    user: { id: 'Umw1sncp6851', nickname: '黄炎', avatar: photo('avatar-user'), phone: '13800138000', city: '北京', storeId: 'ST001', notify: false },
+    coupons: [
+      { id: 'CP001', name: '新人券', amount: 10, min: 50, status: 'unused', expire: ymd(addDays(30)) },
+      { id: 'CP002', name: '满减券', amount: 20, min: 200, status: 'unused', expire: ymd(addDays(45)) }
+    ],
+    owned: [{ id: 'OP001', packageId: 'P002', name: '周期课包 10 节', total: 10, remain: 3, expire: ymd(addDays(70)) }],
+    bookings: [],
+    orders: [],
+    schTab: 'group',
+    schDate: ymd(today()),
+    schType: 'all',
+    schStore: 'all',
+    actTab: 'open',
+    bookingTab: 'upcoming',
+    checkout: null,
+    couponId: '',
+    currentCoach: '',
+    slotDate: ymd(today()),
+    selectedSlot: '',
+    lastResult: null,
+    bannerIndex: 0,
+    busySlots: { [ymd(today()) + '|10:00']: true, [ymd(today()) + '|16:00']: true }
+  };
+  try {
+    var saved = JSON.parse(localStorage.getItem('ranlian_user_html_v1') || 'null');
+    if (saved && saved.user) {
+      S.loggedIn = !!saved.loggedIn;
+      S.user = saved.user;
+      S.coupons = saved.coupons || S.coupons;
+      S.owned = saved.owned || S.owned;
+      S.bookings = saved.bookings || [];
+      S.orders = saved.orders || [];
+    }
+  } catch (e) {}
+  function persist() {
+    localStorage.setItem('ranlian_user_html_v1', JSON.stringify({
+      loggedIn: S.loggedIn, user: S.user, coupons: S.coupons, owned: S.owned, bookings: S.bookings, orders: S.orders
+    }));
+  }
+
+  function storeById(id) { return find(CATALOG.stores, id); }
+  function coachById(id) { return find(CATALOG.coaches, id); }
+  function curStore() { return storeById(S.user.storeId) || CATALOG.stores[0]; }
+  function cities() { var o = {}; CATALOG.stores.forEach(function (s) { o[s.city] = 1; }); return Object.keys(o); }
+  function storesIn(city) { return CATALOG.stores.filter(function (s) { return s.city === city; }); }
+  function pkgRemain() { return S.owned.reduce(function (n, p) { return n + (p.remain || 0); }, 0); }
+  function unusedCoupons() { return S.coupons.filter(function (c) { return c.status === 'unused'; }); }
+  function closeHour(st) { return (st.hours || '').split('-')[1] || ''; }
+
+  var cache = {};
+  var app = document.getElementById('app');
+  var tabbar = document.getElementById('tabbar');
+  var mask = document.getElementById('mask');
+  var sheet = document.getElementById('sheet');
+  var toastEl = document.getElementById('toast');
+  var loadingEl = document.getElementById('loading');
+  var modalEl = document.getElementById('modal');
+  var toastTimer = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.style.display = 'none'; }, 1800);
+  }
+  function busy(on, text) {
+    document.getElementById('loadingText').textContent = text || '请稍候';
+    loadingEl.classList.toggle('is-on', !!on);
+  }
+  function confirmDlg(title, body, okText) {
+    return new Promise(function (resolve) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').textContent = body;
+      document.getElementById('modalOk').textContent = okText || '确定';
+      modalEl.classList.add('is-on');
+      function done(v) {
+        modalEl.classList.remove('is-on');
+        document.getElementById('modalOk').onclick = null;
+        document.getElementById('modalCancel').onclick = null;
+        resolve(v);
+      }
+      document.getElementById('modalOk').onclick = function () { done(true); };
+      document.getElementById('modalCancel').onclick = function () { done(false); };
+    });
+  }
+  function openSheet(html) { sheet.innerHTML = html; mask.classList.add('is-on'); }
+  function closeSheet() { mask.classList.remove('is-on'); sheet.innerHTML = ''; }
+
+  function parseHash() {
+    var h = (location.hash || '#/home').replace(/^#/, '');
+    if (h.charAt(0) !== '/') h = '/' + h;
+    var i = h.indexOf('?');
+    var path = i < 0 ? h : h.slice(0, i);
+    var q = {};
+    if (i >= 0) {
+      h.slice(i + 1).split('&').forEach(function (p) {
+        if (!p) return;
+        var kv = p.split('=');
+        q[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+      });
+    }
+    if (path === '/auth') path = '/profile';
+    return { path: path, query: q };
+  }
+  function go(path, replace) {
+    if (path.charAt(0) !== '/') path = '/' + path;
+    if (replace) location.replace('#' + path);
+    else location.hash = path;
+  }
+  function back() {
+    if (history.length > 1) history.back();
+    else go('/home', true);
+  }
+  var TAB_SET = { '/home': 0, '/venues': 1, '/schedule': 2, '/activities': 3, '/profile': 4 };
+
+  function navBar(title, backOn) {
+    return '<div class="hd"><div class="hd-inner"><div class="hd-left">' +
+      (backOn ? '<button class="icon-btn" data-act="back" title="返回">' + ico('chevron-left', 22, '#fff4ec') + '</button>' : '') +
+      '</div><div class="hd-title">' + title + '</div><div class="hd-right"></div></div></div>';
+  }
+  function empty(text) { return '<div class="empty">' + text + '</div>'; }
+
+  tabbar.innerHTML = TABS.map(function (t, i) {
+    return '<button class="tab-item" data-tab="' + i + '">' + ico(t.icon, 22) + '<span class="tab-txt">' + t.text + '</span></button>';
+  }).join('');
+
+  function ensure(path) {
+    if (cache[path]) return cache[path];
+    var el = document.createElement('div');
+    el.className = 'page';
+    el.setAttribute('data-page', path);
+    app.appendChild(el);
+    var rec = { el: el, built: false };
+    cache[path] = rec;
+    return rec;
+  }
+
+  function sevenDates() {
+    var arr = [];
+    for (var i = 0; i < 7; i++) {
+      var d = addDays(i);
+      arr.push({ key: ymd(d), num: d.getDate(), lab: i === 0 ? '今天' : weekLab(d) });
+    }
+    return arr;
+  }
+
+  function buildHome(rec) {
+    rec.el.className = 'page home-bg';
+    rec.el.innerHTML =
+      '<div class="tab-pad">' +
+      '<div class="home-loc-wrap"><div class="home-loc" data-act="toggle-dd">' + ico('map-pin', 18, '#ff4a1a') + '<span class="home-loc-text" id="locText"></span>' + ico('chevron-down', 18, '#fff4ec') + '</div>' +
+      '<div class="store-dd" id="storeDd"></div></div>' +
+      '<div class="swiper" id="swiper"><div class="swiper-track" id="swiperTrack"></div></div><div class="dots" id="dots"></div>' +
+      '<div class="entry-grid">' +
+      '<div class="entry" data-go="/schedule?tab=group"><div class="entry-ico e1">' + ico('dumbbell', 22, '#fff') + '</div><div class="entry-label">团课</div></div>' +
+      '<div class="entry" data-go="/packages"><div class="entry-ico e2">' + ico('users', 22, '#fff') + '</div><div class="entry-label">私教</div></div>' +
+      '<div class="entry" data-go="/camps"><div class="entry-ico e3">' + ico('sparkles', 22, '#fff') + '</div><div class="entry-label">训练营</div></div>' +
+      '<div class="entry" data-go="/store"><div class="entry-ico e4">' + ico('building-2', 22, '#fff') + '</div><div class="entry-label">门店</div></div>' +
+      '</div>' +
+      '<div class="sec-h"><span class="sec-title">附近门店</span></div><div id="nearStore"></div>' +
+      '<div class="sec-h"><span class="sec-title">热门课程</span><span class="more" data-go="/schedule">更多 ' + ico('chevron-right', 16, '#b07a5e') + '</span></div>' +
+      '<div class="h-scroll" id="hotList"></div>' +
+      '<div class="sec-h"><span class="sec-title">活动</span></div><div id="homeAct"></div>' +
+      '</div>';
+    rec.built = true;
+  }
+  function updateHome() {
+    var st = curStore();
+    document.getElementById('locText').textContent = S.user.city + ' · ' + st.name;
+    var near = document.getElementById('nearStore');
+    near.innerHTML = '<div class="card store-card" data-go="/store?id=' + st.id + '">' + img(st.cover, '', 72, 72) + '<div class="main"><span class="mid-title">' + st.name + '</span><div class="muted" style="margin-top:6px;">距你 ' + st.dist + ' · 营业至 ' + closeHour(st) + '</div></div></div>';
+    var hot = CATALOG.sessions.filter(function (s) { return s.date >= ymd(today()); }).slice(0, 6);
+    document.getElementById('hotList').innerHTML = hot.map(function (s) {
+      return '<div class="card class-hcard" data-go="/class?id=' + s.id + '">' + img(s.cover, '', 148, 96) + '<div class="meta"><span class="meta-title">' + s.name + '</span><div class="muted">' + s.start + '</div><span class="price">' + yuan(s.price) + '</span></div></div>';
+    }).join('');
+    var act = CATALOG.activities.filter(function (a) { return a.status === 'open'; })[0] || CATALOG.activities[0];
+    document.getElementById('homeAct').innerHTML = '<div class="card act-banner" data-go="/activity?id=' + act.id + '">' + img(act.cover, '', 400, 168) + '<div class="cap">' + act.name + ' · ' + LABELS[act.status] + '</div></div>';
+    document.getElementById('swiperTrack').innerHTML = CATALOG.banners.map(function (b) {
+      return '<div class="swiper-item" data-go="' + b.link + '">' + img(b.image, '', 400, 172) + '<div class="swiper-cap">' + b.title + '<span class="swiper-sub">' + b.sub + '</span></div></div>';
+    }).join('');
+    document.getElementById('dots').innerHTML = CATALOG.banners.map(function (_, i) {
+      return '<div class="dot' + (i === S.bannerIndex ? ' is-on' : '') + '"></div>';
+    }).join('');
+    document.getElementById('swiperTrack').style.transform = 'translateX(-' + (S.bannerIndex * 100) + '%)';
+  }
+
+  function buildVenues(rec) {
+    rec.el.innerHTML = navBar('甄选', false) + '<div class="tab-pad grid-2" id="venueGrid"></div>';
+    rec.built = true;
+  }
+  function updateVenues() {
+    document.getElementById('venueGrid').innerHTML = CATALOG.venues.map(function (v) {
+      return '<div class="card venue-card" data-go="/venue?id=' + v.id + '">' + img(v.cover, '', 200, 110) + '<div class="meta"><span class="mid-title">' + v.name + '</span><div class="muted" style="margin:4px 0;">' + v.dist + '</div><span class="price">' + yuan(v.price) + '</span></div></div>';
+    }).join('');
+  }
+
+  function buildSchedule(rec) {
+    rec.el.innerHTML =
+      '<div class="seg"><div class="seg-btn" data-sch="group">团课</div><div class="seg-btn" data-sch="private">私教</div><div class="seg-btn" data-sch="camp">训练营</div></div>' +
+      '<div id="schTools"></div><div class="tab-pad" id="schBody"></div>';
+    rec.built = true;
+  }
+  function updateSchedule(query) {
+    if (query && query.tab) S.schTab = query.tab;
+    recSel(document.querySelectorAll('[data-sch]'), S.schTab, 'data-sch');
+    var tools = document.getElementById('schTools');
+    var body = document.getElementById('schBody');
+    if (S.schTab === 'group') {
+      tools.innerHTML = '<div class="date-strip">' + sevenDates().map(function (d) {
+        return '<div class="date-chip' + (S.schDate === d.key ? ' is-on' : '') + '" data-date="' + d.key + '"><span class="d-num">' + d.num + '</span>' + d.lab + '</div>';
+      }).join('') + '</div><div class="filter-row"><div class="chip' + (S.schType !== 'all' ? ' is-on' : '') + '" data-act="filter-type">课程类型 ▾</div><div class="chip' + (S.schStore !== 'all' ? ' is-on' : '') + '" data-act="filter-store">门店 ▾</div></div>';
+      var list = CATALOG.sessions.filter(function (s) {
+        if (s.date !== S.schDate) return false;
+        if (S.schType !== 'all' && s.courseId !== S.schType) return false;
+        if (S.schStore !== 'all' && s.storeId !== S.schStore) return false;
+        var st = storeById(s.storeId);
+        return st && st.city === S.user.city;
+      });
+      if (!list.length) { body.innerHTML = empty('这一天没有排课'); return; }
+      var groups = {};
+      list.forEach(function (s) { (groups[s.start] || (groups[s.start] = [])).push(s); });
+      body.innerHTML = Object.keys(groups).sort().map(function (t) {
+        return '<div class="group-h">' + t + '</div>' + groups[t].map(function (s) {
+          var c = coachById(s.coachId) || {};
+          var full = s.booked >= s.capacity;
+          return '<div class="card session-card" data-go="/class?id=' + s.id + '">' + img(c.avatar || s.cover, 'avatar', 44, 44) +
+            '<div class="mid"><span class="mid-title">' + s.name + '</span><div class="muted" style="margin:4px 0;">' + s.start + '-' + s.end + '</div></div>' +
+            '<div class="right"><div class="price">' + yuan(s.price) + '</div><div class="btn ' + (full ? 'btn-disabled' : 'btn-primary') + '" style="margin-top:6px;">' + (full ? '已满员' : '预约') + '</div></div></div>';
+        }).join('');
+      }).join('');
+    } else if (S.schTab === 'private') {
+      tools.innerHTML = '';
+      body.innerHTML = '<div class="pad"><span class="muted">约私教请先买课包，再选教练和时间。</span></div>' +
+        CATALOG.coaches.map(function (c) {
+          return '<div class="card session-card" data-go="/coach?id=' + c.id + '">' + img(c.avatar, 'avatar', 44, 44) +
+            '<div class="mid"><span class="mid-title">' + c.name + '</span><div class="muted" style="margin-top:4px;">' + c.skills.join(' / ') + '</div></div>' +
+            '<div class="btn btn-primary">预约</div></div>';
+        }).join('') +
+        '<div class="pad"><div class="btn btn-ghost" style="width:100%;" data-go="/packages">去看课包</div></div>';
+    } else {
+      tools.innerHTML = '';
+      body.innerHTML = CATALOG.camps.map(function (c) {
+        return '<div class="card camp-card" data-go="/camp?id=' + c.id + '"><div class="cover-wrap" style="height:180px;">' + img(c.cover, '', 400, 180) + '</div>' +
+          '<div style="padding:10px 12px;"><span class="mid-title">' + c.name + '</span><div style="margin:6px 0;">' + c.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>' +
+          '<div class="muted">开营 ' + md(c.startDate) + ' · 剩余 ' + (c.capacity - c.booked) + ' 名额</div><div style="margin-top:6px;" class="price">' + yuan(c.price) + '</div></div></div>';
+      }).join('');
+    }
+  }
+
+  function buildActivities(rec) {
+    rec.el.innerHTML = '<div class="seg"><div class="seg-btn" data-acttab="open">报名中</div><div class="seg-btn" data-acttab="ended">已结束</div></div><div class="tab-pad" id="actBody"></div>';
+    rec.built = true;
+  }
+  function updateActivities() {
+    recSel(document.querySelectorAll('[data-acttab]'), S.actTab, 'data-acttab');
+    var list = CATALOG.activities.filter(function (a) { return S.actTab === 'ended' ? a.status === 'ended' : a.status !== 'ended'; });
+    document.getElementById('actBody').innerHTML = list.length ? list.map(function (a) {
+      return '<div class="card camp-card" data-go="/activity?id=' + a.id + '"><div class="cover-wrap" style="height:168px;">' + img(a.cover, '', 400, 168) + '</div>' +
+        '<div style="padding:10px 12px;"><span class="mid-title">' + a.name + '</span><div class="muted" style="margin-top:6px;">' + a.date + ' ' + a.time + '</div><div style="margin-top:6px;" class="price">' + (a.price ? yuan(a.price) : '免费') + '</div></div></div>';
+    }).join('') : empty('暂无活动');
+  }
+
+  function buildProfile(rec) {
+    rec.el.innerHTML = '<div class="tab-pad" id="profileBody"></div>';
+    rec.built = true;
+  }
+  function updateProfile() {
+    var body = document.getElementById('profileBody');
+    var menu = '<div class="card menu-card">' +
+      rowGo('/bookings', 'calendar-days', '我的预约') +
+      rowGo('/orders', 'credit-card', '我的订单') +
+      rowGo('/enterprise', 'building-2', '企业服务') +
+      '<div class="list-row" data-act="cs"><div class="left">' + ico('message-circle', 20, '#fff4ec') + '<span class="left-text">联系客服</span></div>' + ico('chevron-right', 18, '#b07a5e') + '</div>' +
+      rowGo('/settings', 'settings', '设置', true) + '</div>';
+    if (!S.loggedIn) {
+      body.innerHTML = '<div class="wx-login-card"><div class="wx-login-title">微信登录</div><div class="wx-login-sub">点击按钮，使用演示账号登录</div><button class="wx-login-btn" data-act="login">微信登录</button></div>' + menu;
+      return;
+    }
+    body.innerHTML =
+      '<div class="profile-hero">' + img(S.user.avatar, 'pf-ava', 64, 64) + '<div><span class="pf-name">' + S.user.nickname + '</span><div style="font-size:12px;opacity:.9;margin-top:4px;">欢迎来到燃练</div></div></div>' +
+      '<div class="card asset-bar"><div class="asset-btn" data-go="/my-packages"><span class="asset-num">' + pkgRemain() + '</span><span class="asset-lab">课包剩余(次)</span></div>' +
+      '<div class="asset-btn" data-go="/coupons"><span class="asset-num">' + unusedCoupons().length + '</span><span class="asset-lab">优惠券(张)</span></div></div>' +
+      '<div class="card train-card">训练记录：累计 ' + S.bookings.filter(function (b) { return b.status === 'completed'; }).length + ' 次 · 0 天 · 0 小时</div>' +
+      menu + '<div class="logout-btn" data-act="logout">退出登录</div>';
+  }
+  function rowGo(path, icon, text, last) {
+    return '<div class="list-row" data-go="' + path + '"' + (last ? ' style="border:none;"' : '') + '><div class="left">' + ico(icon, 20, '#fff4ec') + '<span class="left-text">' + text + '</span></div>' + ico('chevron-right', 18, '#b07a5e') + '</div>';
+  }
+
+  function recSel(nodes, val, attr) {
+    nodes.forEach(function (n) { n.classList.toggle('is-on', n.getAttribute(attr) === val); });
+  }
+
+  function detailShell(title) {
+    return navBar(title, true) + '<div class="cta-pad" id="dBody"></div><div class="sticky-cta" id="dCta"></div>';
+  }
+  function buildSimple(rec, title) {
+    rec.el.innerHTML = navBar(title, true) + '<div class="page-body" id="dBody" style="padding-bottom:24px;"></div>';
+    rec.built = true;
+  }
+
+  function sessionLeft(s) { return Math.max(0, s.capacity - s.booked); }
+
+  function updateClass(q) {
+    var s = find(CATALOG.sessions, q.id);
+    var body = cache['/class'].el.querySelector('#dBody');
+    var cta = cache['/class'].el.querySelector('#dCta');
+    if (!s) { body.innerHTML = empty('课程不存在或已下架'); cta.style.display = 'none'; return; }
+    var st = storeById(s.storeId) || {};
+    var c = coachById(s.coachId) || {};
+    var full = sessionLeft(s) <= 0;
+    body.innerHTML = '<div class="cover-wrap">' + img(s.cover, '', 400, 211) + '</div><div class="pad"><div class="detail-title">' + s.name + '</div><div style="margin-top:8px;">' + s.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div>' +
+      '<div class="kv"><div class="kv-cell"><span class="kv-b">' + s.durationMin + ' 分钟</span><span class="kv-s">时长</span></div><div class="kv-cell"><span class="kv-b">' + s.intensity + '</span><span class="kv-s">强度</span></div><div class="kv-cell"><span class="kv-b">' + s.crowd + '</span><span class="kv-s">适合</span></div></div>' +
+      '<div class="card info-card">时间 ' + md(s.date) + ' ' + s.start + '-' + s.end + '\n地点 ' + st.name + ' · ' + s.room + '\n教练 ' + c.name + '\n剩余名额 ' + sessionLeft(s) + ' 人</div>' +
+      '<div class="card rule-card">取消规则：开课前 6 小时可自助取消，退款原路返回。超时请联系门店。</div>' +
+      '<div class="article">' + s.intro + '</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<div><span class="price">' + yuan(s.price) + '</span> <span class="origin">' + yuan(s.originPrice) + '</span></div>' +
+      '<button class="btn btn-lg ' + (full ? 'btn-disabled' : 'btn-primary') + '" data-act="book-class" data-id="' + s.id + '">' + (full ? '已满员' : '立即预约') + '</button>';
+  }
+
+  function updatePackage(q) {
+    var p = find(CATALOG.packages, q.id);
+    var body = cache['/package'].el.querySelector('#dBody');
+    var cta = cache['/package'].el.querySelector('#dCta');
+    if (!p) { body.innerHTML = empty('课包不存在'); cta.style.display = 'none'; return; }
+    body.innerHTML = '<div class="cover-wrap">' + img(p.cover, '', 400, 211) + '</div><div class="pad"><div class="detail-title">' + p.name + '</div></div>' +
+      '<div class="kv"><div class="kv-cell"><span class="kv-b">' + p.sessions + ' 次</span><span class="kv-s">课时</span></div><div class="kv-cell"><span class="kv-b">' + p.validDays + ' 天</span><span class="kv-s">有效期</span></div><div class="kv-cell"><span class="kv-b">私教</span><span class="kv-s">类型</span></div></div>' +
+      '<div class="card info-card">' + p.desc + '</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<div><span class="price">' + yuan(p.price) + '</span> <span class="origin">' + yuan(p.originPrice) + '</span></div><button class="btn btn-lg btn-primary" data-act="buy-pkg" data-id="' + p.id + '">立即购买</button>';
+  }
+  function updateCamp(q) {
+    var c = find(CATALOG.camps, q.id);
+    var body = cache['/camp'].el.querySelector('#dBody');
+    var cta = cache['/camp'].el.querySelector('#dCta');
+    if (!c) { body.innerHTML = empty('训练营不存在'); cta.style.display = 'none'; return; }
+    var st = storeById(c.storeId) || {};
+    var coach = coachById(c.coachId) || {};
+    body.innerHTML = '<div class="cover-wrap">' + img(c.cover, '', 400, 211) + '</div><div class="pad"><div class="detail-title">' + c.name + '</div><div style="margin-top:8px;">' + c.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div>' +
+      '<div class="card info-card">开营 ' + md(c.startDate) + ' · ' + c.weeks + ' 周\n' + c.schedule + '\n' + st.name + ' · ' + coach.name + '\n剩余 ' + (c.capacity - c.booked) + ' 名额</div>' +
+      '<div class="article">' + c.intro + '</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<div><span class="price">' + yuan(c.price) + '</span> <span class="origin">' + yuan(c.originPrice) + '</span></div><button class="btn btn-lg btn-primary" data-act="buy-camp" data-id="' + c.id + '">立即报名</button>';
+  }
+  function updateVenue(q) {
+    var v = find(CATALOG.venues, q.id);
+    var body = cache['/venue'].el.querySelector('#dBody');
+    var cta = cache['/venue'].el.querySelector('#dCta');
+    if (!v) { body.innerHTML = empty('场地不存在'); cta.style.display = 'none'; return; }
+    body.innerHTML = '<div class="cover-wrap">' + img(v.cover, '', 400, 211) + '</div><div class="pad"><div class="detail-title">' + v.name + '</div><div style="margin-top:8px;">' + v.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div>' +
+      '<div class="card info-card">' + v.address + '\n营业 ' + v.hours + ' · ' + v.dist + '</div><div class="article">' + v.intro + '</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<div><span class="price">' + yuan(v.price) + '</span> <span class="origin">' + yuan(v.originPrice) + '</span></div><button class="btn btn-lg btn-primary" data-act="buy-venue" data-id="' + v.id + '">预约体验</button>';
+  }
+  function updateActivity(q) {
+    var a = find(CATALOG.activities, q.id);
+    var body = cache['/activity'].el.querySelector('#dBody');
+    var cta = cache['/activity'].el.querySelector('#dCta');
+    if (!a) { body.innerHTML = empty('活动不存在'); cta.style.display = 'none'; return; }
+    var st = storeById(a.storeId) || {};
+    var ended = a.status === 'ended';
+    body.innerHTML = '<div class="cover-wrap">' + img(a.cover, '', 400, 211) + '</div><div class="pad"><div class="detail-title">' + a.name + '</div></div>' +
+      '<div class="card info-card">' + a.date + ' ' + a.time + '\n' + st.name + '\n剩余 ' + (a.capacity - a.booked) + ' 名额</div><div class="article">' + a.intro + '</div>';
+    cta.style.display = 'flex';
+    var lab = ended ? '已结束' : (a.price ? '立即报名 ' + yuan(a.price) : '免费报名');
+    cta.innerHTML = '<div class="muted">' + LABELS[a.status] + '</div><button class="btn btn-lg ' + (ended ? 'btn-disabled' : 'btn-primary') + '" data-act="join-act" data-id="' + a.id + '">' + lab + '</button>';
+  }
+  function updateCoach(q) {
+    var c = find(CATALOG.coaches, q.id);
+    var body = cache['/coach'].el.querySelector('#dBody');
+    var cta = cache['/coach'].el.querySelector('#dCta');
+    if (!c) { body.innerHTML = empty('教练不存在'); cta.style.display = 'none'; return; }
+    var st = storeById(c.storeId) || {};
+    body.innerHTML = '<div class="pad" style="display:flex;gap:12px;align-items:center;">' + img(c.avatar, 'avatar', 64, 64) + '<div><div class="detail-title">' + c.name + '</div><div class="muted" style="margin-top:4px;">' + c.title + '</div></div></div>' +
+      '<div class="kv"><div class="kv-cell"><span class="kv-b">' + c.years + ' 年</span><span class="kv-s">教龄</span></div><div class="kv-cell"><span class="kv-b">' + c.skills[0] + '</span><span class="kv-s">专项</span></div><div class="kv-cell"><span class="kv-b">' + st.name + '</span><span class="kv-s">门店</span></div></div>' +
+      '<div class="article">' + c.intro + '</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<div class="muted">剩余课包 ' + pkgRemain() + ' 次</div><button class="btn btn-lg btn-primary" data-act="book-coach" data-id="' + c.id + '">预约</button>';
+  }
+  function updateStore(q) {
+    var st = storeById(q.id || S.user.storeId) || curStore();
+    var body = cache['/store'].el.querySelector('#dBody');
+    body.innerHTML = '<div class="cover-wrap">' + img(st.cover, '', 400, 211) + '</div><div class="pad"><div class="detail-title">' + st.name + '</div><div style="margin-top:8px;">' + st.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div>' +
+      '<div class="gallery">' + st.gallery.map(function (g) { return img(g, '', 120, 80); }).join('') + '</div>' +
+      '<div class="card info-card">' + st.address + '\n' + st.hours + ' · ' + st.dist + '\n' + st.phone + '</div>' +
+      '<div class="pad"><button class="btn btn-ghost" data-act="call" data-phone="' + st.phone + '">打电话</button> <button class="btn btn-ghost" data-act="copy" data-text="' + st.address + '">复制地址</button></div>' +
+      '<div class="pad"><button class="btn btn-primary btn-lg" style="width:100%;" data-go="/schedule">看本店课表</button></div>';
+  }
+  function updateStores() {
+    var body = cache['/stores'].el.querySelector('#dBody');
+    body.innerHTML = '<div class="dd-cities" style="padding:12px 16px;">' + cities().map(function (c) {
+      return '<div class="chip' + (c === S.user.city ? ' is-on' : '') + '" data-act="city" data-id="' + c + '">' + c + '</div>';
+    }).join('') + '</div>' + storesIn(S.user.city).map(function (s) {
+      return '<div class="card store-card" style="margin:8px 16px;" data-act="pick-store" data-id="' + s.id + '">' + img(s.cover, '', 72, 72) + '<div class="main"><span class="mid-title">' + s.name + '</span><div class="muted" style="margin-top:6px;">' + s.address + '</div></div></div>';
+    }).join('');
+  }
+  function updatePackages() {
+    var body = cache['/packages'].el.querySelector('#dBody');
+    body.innerHTML = CATALOG.packages.map(function (p) {
+      return '<div class="card pkg-row" data-go="/package?id=' + p.id + '">' + img(p.cover, '', 88, 66) + '<div class="main"><span class="mid-title">' + p.name + '</span><div class="muted" style="margin-top:4px;">' + p.sessions + ' 次 · ' + p.validDays + ' 天</div><div class="price" style="margin-top:4px;">' + yuan(p.price) + '</div></div></div>';
+    }).join('') + '<div class="sec-h"><span class="sec-title">教练</span></div>' + CATALOG.coaches.map(function (c) {
+      return '<div class="card session-card" data-go="/coach?id=' + c.id + '">' + img(c.avatar, 'avatar', 44, 44) + '<div class="mid"><span class="mid-title">' + c.name + '</span><div class="muted">' + c.title + '</div></div></div>';
+    }).join('');
+  }
+  function updateCoaches() {
+    cache['/coaches'].el.querySelector('#dBody').innerHTML = CATALOG.coaches.map(function (c) {
+      return '<div class="card session-card" data-go="/coach?id=' + c.id + '">' + img(c.avatar, 'avatar', 44, 44) + '<div class="mid"><span class="mid-title">' + c.name + '</span><div class="muted">' + c.skills.join(' / ') + '</div></div><div class="btn btn-primary">预约</div></div>';
+    }).join('');
+  }
+  function updateCamps() {
+    cache['/camps'].el.querySelector('#dBody').innerHTML = CATALOG.camps.map(function (c) {
+      return '<div class="card camp-card" data-go="/camp?id=' + c.id + '"><div class="cover-wrap" style="height:180px;">' + img(c.cover, '', 400, 180) + '</div><div style="padding:10px 12px;"><span class="mid-title">' + c.name + '</span><div class="muted" style="margin-top:6px;">开营 ' + md(c.startDate) + '</div><div class="price" style="margin-top:6px;">' + yuan(c.price) + '</div></div></div>';
+    }).join('');
+  }
+  function payable(price) {
+    var c = find(S.coupons, S.couponId);
+    if (!c || c.status !== 'unused' || price < c.min) return price;
+    return Math.max(0, price - c.amount);
+  }
+  function updateConfirm() {
+    var ck = S.checkout;
+    var body = cache['/confirm'].el.querySelector('#dBody');
+    var cta = cache['/confirm'].el.querySelector('#dCta');
+    if (!ck) { body.innerHTML = empty('没有待确认的订单'); cta.style.display = 'none'; return; }
+    var pay = payable(ck.price);
+    var c = find(S.coupons, S.couponId);
+    var couponLine = c ? c.name + ' -¥' + c.amount : '未使用';
+    body.innerHTML = '<div class="card" style="margin:12px 16px;overflow:hidden;">' +
+      [['项目', ck.title], ['时间', ck.when], ['地点', ck.place], ['说明', ck.extra || '—']].map(function (r) {
+        return '<div class="list-row"><span class="muted">' + r[0] + '</span><span class="row-val">' + r[1] + '</span></div>';
+      }).join('') + '</div>' +
+      (ck.price > 0 ? '<div class="card list-row" style="margin:8px 16px;border-radius:12px;" data-act="pick-coupon"><span>优惠券</span><span style="color:#ff4a1a;">' + couponLine + '</span></div>' : '') +
+      '<div class="card rule-card">支付为演示，不会产生真实扣款。确认后占名额并写入预约/订单。</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<div class="muted">应付 <span class="price" style="font-size:20px;">' + yuan(pay) + '</span></div><button class="btn btn-primary btn-lg" data-act="go-pay">去支付</button>';
+  }
+  function updateResult() {
+    var r = S.lastResult;
+    var body = cache['/result'].el.querySelector('#dBody');
+    if (!r) { body.innerHTML = empty('没有支付记录'); return; }
+    body.innerHTML = '<div style="text-align:center;padding:48px 16px 16px;"><div class="' + (r.ok ? 'pay-ok' : 'pay-fail') + '">' + ico(r.ok ? 'check' : 'x', 28, '#fff') + '</div>' +
+      '<div style="font-size:18px;font-weight:700;margin-top:14px;">' + r.headline + '</div><div class="muted" style="margin-top:8px;line-height:1.7;">' + r.title + '<br/>' + r.when + '</div>' +
+      (r.ok ? '<div class="btn btn-primary" style="margin-top:20px;" data-act="notify">开启上课提醒</div>' : '') +
+      '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px;"><div class="btn btn-ghost" data-go="/bookings">查看我的预约</div><div class="btn btn-ghost" data-go="/home">返回首页</div></div></div>';
+  }
+  function updateBookings() {
+    var body = cache['/bookings'].el.querySelector('#dBody');
+    var tabs = '<div class="seg"><div class="seg-btn" data-btab="upcoming">待上课</div><div class="seg-btn" data-btab="completed">已完成</div><div class="seg-btn" data-btab="cancelled">已取消</div></div>';
+    var list = S.bookings.filter(function (b) { return b.status === S.bookingTab; });
+    body.innerHTML = tabs + (list.length ? list.map(function (b) {
+      return '<div class="card session-card" data-go="/booking?id=' + b.id + '"><div class="mid"><span class="mid-title">' + b.title + '</span><div class="muted" style="margin-top:4px;">' + b.when + '</div></div><span class="tag tag-orange">' + LABELS[b.status] + '</span></div>';
+    }).join('') : empty('暂无预约'));
+    recSel(body.querySelectorAll('[data-btab]'), S.bookingTab, 'data-btab');
+  }
+  function updateBooking(q) {
+    var b = find(S.bookings, q.id);
+    var body = cache['/booking'].el.querySelector('#dBody');
+    if (!b) { body.innerHTML = empty('预约不存在'); return; }
+    body.innerHTML = '<div class="card" style="margin:12px 16px;overflow:hidden;">' +
+      [['项目', b.title], ['时间', b.when], ['类型', LABELS[b.kind] || b.kind], ['状态', LABELS[b.status]]].map(function (r) {
+        return '<div class="list-row"><span class="muted">' + r[0] + '</span><span class="row-val">' + r[1] + '</span></div>';
+      }).join('') + '</div>' +
+      (b.orderId ? '<div class="pad"><button class="btn btn-ghost" data-go="/order?id=' + b.orderId + '">查看订单</button></div>' : '') +
+      (b.status === 'upcoming' ? '<div class="pad"><button class="btn btn-ghost" style="color:#e24c4c;" data-act="cancel-bk" data-id="' + b.id + '">取消预约</button></div>' : '');
+  }
+  function updateOrders() {
+    var body = cache['/orders'].el.querySelector('#dBody');
+    body.innerHTML = S.orders.length ? S.orders.map(function (o) {
+      return '<div class="card session-card" data-go="/order?id=' + o.id + '"><div class="mid"><span class="mid-title">' + o.title + '</span><div class="muted" style="margin-top:4px;">' + yuan(o.payAmount) + '</div></div><span class="tag tag-orange">' + LABELS[o.status] + '</span></div>';
+    }).join('') : empty('暂无订单');
+  }
+  function updateOrder(q) {
+    var o = find(S.orders, q.id);
+    var body = cache['/order'].el.querySelector('#dBody');
+    if (!o) { body.innerHTML = empty('订单不存在'); return; }
+    body.innerHTML = '<div class="card" style="margin:12px 16px;overflow:hidden;">' +
+      [['订单', o.id], ['项目', o.title], ['金额', yuan(o.payAmount)], ['状态', LABELS[o.status]]].map(function (r) {
+        return '<div class="list-row"><span class="muted">' + r[0] + '</span><span class="row-val">' + r[1] + '</span></div>';
+      }).join('') + '</div>' +
+      (o.status === 'refunded' || o.status === 'refunding' ? '<div class="pad"><button class="btn btn-ghost" data-go="/refund?id=' + o.id + '">退款详情</button></div>' : '');
+  }
+  function updateRefund(q) {
+    var o = find(S.orders, q.id);
+    var body = cache['/refund'].el.querySelector('#dBody');
+    if (!o) { body.innerHTML = empty('没有退款记录'); return; }
+    body.innerHTML = '<div class="card" style="margin:12px 16px;overflow:hidden;"><div class="list-row"><span class="muted">退款状态</span><span class="row-val">' + LABELS[o.status] + '</span></div><div class="list-row"><span class="muted">金额</span><span class="row-val">' + yuan(o.payAmount) + '</span></div></div>';
+  }
+  function updateMyPackages() {
+    var body = cache['/my-packages'].el.querySelector('#dBody');
+    body.innerHTML = S.owned.length ? S.owned.map(function (p) {
+      return '<div class="card pkg-row" data-go="/coaches"><div class="main"><span class="mid-title">' + p.name + '</span><div class="muted" style="margin-top:4px;">剩余 ' + p.remain + ' / ' + p.total + ' · 有效至 ' + p.expire + '</div></div></div>';
+    }).join('') : empty('还没有课包') + '<div class="pad"><button class="btn btn-primary" data-go="/packages">去看看课包</button></div>';
+  }
+  function updateCoupons() {
+    var body = cache['/coupons'].el.querySelector('#dBody');
+    body.innerHTML = S.coupons.length ? S.coupons.map(function (c) {
+      return '<div class="card" style="margin:8px 16px;padding:14px;"><div class="mid-title">' + c.name + '</div><div class="price" style="margin:6px 0;">¥' + c.amount + '</div><div class="muted">满' + c.min + '可用 · ' + LABELS[c.status] + ' · ' + c.expire + '</div></div>';
+    }).join('') : empty('暂无优惠券');
+  }
+  function updateEnterprise() {
+    var body = cache['/enterprise'].el.querySelector('#dBody');
+    body.innerHTML = '<div class="pad muted">提交后店里会打电话跟进，不做在线报价。</div>' +
+      '<div class="field"><span class="field-lab">公司名</span><input class="field-input" id="entCompany" placeholder="请输入公司名" maxlength="40"/></div>' +
+      '<div class="field"><span class="field-lab">联系人</span><input class="field-input" id="entName" placeholder="请输入联系人" maxlength="20"/></div>' +
+      '<div class="field"><span class="field-lab">电话</span><input class="field-input" id="entPhone" placeholder="11 位手机号" maxlength="11"/></div>' +
+      '<div class="field"><span class="field-lab">需求</span><textarea class="field-textarea" id="entNeed" placeholder="请填写需求" maxlength="200"></textarea></div>' +
+      '<div class="pad"><button class="btn btn-primary btn-lg" style="width:100%;" data-act="ent-submit">提交</button></div>';
+  }
+  function updateSettings() {
+    var body = cache['/settings'].el.querySelector('#dBody');
+    body.innerHTML = '<div class="card" style="margin:12px 16px;overflow:hidden;">' +
+      '<div class="list-row" data-act="legal" data-id="user"><span>用户协议</span>' + ico('chevron-right', 18, '#b07a5e') + '</div>' +
+      '<div class="list-row" data-act="legal" data-id="privacy"><span>隐私政策</span>' + ico('chevron-right', 18, '#b07a5e') + '</div>' +
+      '<div class="list-row" data-act="legal" data-id="about"><span>关于我们</span>' + ico('chevron-right', 18, '#b07a5e') + '</div>' +
+      '<div class="list-row" style="border:none;color:#e24c4c;" data-act="logout"><span>退出登录</span></div></div>';
+  }
+  function updateSlots() {
+    var c = coachById(S.currentCoach);
+    var body = cache['/slots'].el.querySelector('#dBody');
+    var cta = cache['/slots'].el.querySelector('#dCta');
+    if (!c) { body.innerHTML = empty('请先选择教练'); cta.style.display = 'none'; return; }
+    var hours = ['10:00', '11:00', '14:00', '15:00', '16:00', '19:00'];
+    body.innerHTML = '<div class="card session-card" style="margin:12px 16px;">' + img(c.avatar, 'avatar', 44, 44) + '<div class="mid"><span class="mid-title">' + c.name + '</span><div class="muted">私教 · 扣 1 次课包</div></div></div>' +
+      '<div class="date-strip">' + sevenDates().map(function (d) {
+        return '<div class="date-chip' + (S.slotDate === d.key ? ' is-on' : '') + '" data-slotdate="' + d.key + '"><span class="d-num">' + d.num + '</span>' + d.lab + '</div>';
+      }).join('') + '</div>' +
+      '<div class="slot-grid">' + hours.map(function (h) {
+        var busy = !!S.busySlots[S.slotDate + '|' + h];
+        var on = S.selectedSlot === h;
+        return '<div class="slot' + (busy ? ' is-busy' : '') + (on ? ' is-on' : '') + '" data-act="pick-slot" data-id="' + h + '">' + h + '</div>';
+      }).join('') + '</div><div class="muted" style="text-align:center;">灰色 = 已被约走或已过期</div>';
+    cta.style.display = 'flex';
+    cta.innerHTML = '<span class="muted">剩余课包 ' + pkgRemain() + ' 次</span><button class="btn btn-primary btn-lg" data-act="confirm-slot">确认预约</button>';
+  }
+
+  var BUILDERS = {
+    '/home': buildHome,
+    '/venues': buildVenues,
+    '/schedule': buildSchedule,
+    '/activities': buildActivities,
+    '/profile': buildProfile
+  };
+  ['/class', '/package', '/camp', '/venue', '/activity', '/coach', '/confirm', '/slots'].forEach(function (p) {
+    BUILDERS[p] = function (rec) {
+      var titles = { '/class': '课程详情', '/package': '课包详情', '/camp': '训练营', '/venue': '场地详情', '/activity': '活动详情', '/coach': '教练详情', '/confirm': '确认订单', '/slots': '预约私教' };
+      rec.el.innerHTML = detailShell(titles[p]);
+      rec.built = true;
+    };
+  });
+  ['/store', '/stores', '/packages', '/coaches', '/camps', '/result', '/bookings', '/booking', '/orders', '/order', '/refund', '/my-packages', '/coupons', '/enterprise', '/settings'].forEach(function (p) {
+    var titles = { '/store': '门店', '/stores': '选择门店', '/packages': '课包', '/coaches': '教练', '/camps': '训练营', '/result': '支付结果', '/bookings': '我的预约', '/booking': '预约详情', '/orders': '我的订单', '/order': '订单详情', '/refund': '退款详情', '/my-packages': '我的课包', '/coupons': '优惠券', '/enterprise': '企业服务', '/settings': '设置' };
+    BUILDERS[p] = function (rec) { buildSimple(rec, titles[p]); };
+  });
+  var UPDATERS = {
+    '/home': updateHome, '/venues': updateVenues, '/schedule': updateSchedule, '/activities': updateActivities, '/profile': updateProfile,
+    '/class': updateClass, '/package': updatePackage, '/camp': updateCamp, '/venue': updateVenue, '/activity': updateActivity, '/coach': updateCoach,
+    '/store': updateStore, '/stores': updateStores, '/packages': updatePackages, '/coaches': updateCoaches, '/camps': updateCamps,
+    '/confirm': updateConfirm, '/result': updateResult, '/bookings': updateBookings, '/booking': updateBooking, '/orders': updateOrders,
+    '/order': updateOrder, '/refund': updateRefund, '/my-packages': updateMyPackages, '/coupons': updateCoupons, '/enterprise': updateEnterprise,
+    '/settings': updateSettings, '/slots': updateSlots
+  };
+
+  function render() {
+    var r = parseHash();
+    var path = UPDATERS[r.path] ? r.path : '/home';
+    if (path !== r.path) { location.replace('#/home'); return; }
+    Object.keys(cache).forEach(function (p) { cache[p].el.classList.remove('is-on'); });
+    var rec = ensure(path);
+    if (!rec.built) BUILDERS[path](rec);
+    rec.el.classList.add('is-on');
+    UPDATERS[path](r.query);
+    var ti = TAB_SET[path];
+    tabbar.classList.toggle('is-on', ti !== undefined);
+    [].forEach.call(tabbar.children, function (el, i) { el.classList.toggle('is-on', i === ti); });
+    window.scrollTo(0, 0);
+  }
+
+  function needLogin() {
+    if (S.loggedIn) return true;
+    toast('请先登录');
+    go('/profile');
+    return false;
+  }
+  function needPhone() {
+    if (S.user.phone) return true;
+    openSheet('<div class="sheet-h">授权手机号</div><div class="pad muted">预约和支付需要手机号，用于上课提醒和售后联系。</div><div class="pad"><button class="btn btn-primary btn-lg" style="width:100%;" data-act="mock-phone">使用微信手机号</button><button class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" data-act="close-sheet">取消</button></div>');
+    return false;
+  }
+  function startCheckout(ck) {
+    S.checkout = ck;
+    S.couponId = '';
+    go('/confirm');
+  }
+  function paySuccess(order, booking) {
+    S.lastResult = { ok: true, headline: '支付成功', title: order.title, when: booking ? booking.when : '' };
+    persist();
+    go('/result', true);
+  }
+
+  function doPay() {
+    var ck = S.checkout;
+    if (!ck) return;
+    var pay = payable(ck.price);
+    var c = find(S.coupons, S.couponId);
+    if (c && pay < ck.price) c.status = 'used';
+    if (ck.kind === 'group') {
+      var s = find(CATALOG.sessions, ck.sessionId);
+      if (!s || s.booked >= s.capacity) { toast('这节课已满员'); return; }
+      s.booked += 1;
+    }
+    if (ck.kind === 'camp') {
+      var camp = find(CATALOG.camps, ck.campId);
+      if (camp) camp.booked += 1;
+    }
+    if (ck.kind === 'activity') {
+      var act = find(CATALOG.activities, ck.activityId);
+      if (act) act.booked += 1;
+    }
+    if (ck.kind === 'package') {
+      var p = find(CATALOG.packages, ck.packageId);
+      S.owned.push({ id: uid('OP'), packageId: p.id, name: p.name, total: p.sessions, remain: p.sessions, expire: ymd(addDays(p.validDays)) });
+    }
+    var oid = uid('O');
+    var bid = uid('BK');
+    var order = { id: oid, title: ck.title, payAmount: pay, status: 'paid', kind: ck.kind };
+    S.orders.unshift(order);
+    var booking = null;
+    if (ck.kind !== 'package') {
+      booking = { id: bid, orderId: oid, title: ck.title, when: ck.when, kind: ck.kind, status: 'upcoming', sessionId: ck.sessionId || '', cancelHours: ck.cancelHours || 6 };
+      S.bookings.unshift(booking);
+    }
+    closeSheet();
+    paySuccess(order, booking);
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go],[data-act],[data-tab],[data-sch],[data-date],[data-acttab],[data-btab],[data-slotdate],[data-act="pick-store"]');
+    if (!t) {
+      if (!e.target.closest('.store-dd') && !e.target.closest('[data-act="toggle-dd"]')) {
+        var dd = document.getElementById('storeDd');
+        if (dd) dd.classList.remove('is-on');
+      }
+      return;
+    }
+    if (t.getAttribute('data-go')) { go(t.getAttribute('data-go')); return; }
+    var act = t.getAttribute('data-act');
+    var tab = t.getAttribute('data-tab');
+    if (tab != null) { go(TABS[Number(tab)].path); return; }
+    if (t.getAttribute('data-sch')) { S.schTab = t.getAttribute('data-sch'); updateSchedule(); return; }
+    if (t.getAttribute('data-date')) { S.schDate = t.getAttribute('data-date'); updateSchedule(); return; }
+    if (t.getAttribute('data-acttab')) { S.actTab = t.getAttribute('data-acttab'); updateActivities(); return; }
+    if (t.getAttribute('data-btab')) { S.bookingTab = t.getAttribute('data-btab'); updateBookings(); return; }
+    if (t.getAttribute('data-slotdate')) { S.slotDate = t.getAttribute('data-slotdate'); S.selectedSlot = ''; updateSlots(); return; }
+    if (act === 'back') { back(); return; }
+    if (act === 'close-sheet') { closeSheet(); return; }
+    if (act === 'toggle-dd') {
+      var box = document.getElementById('storeDd');
+      var on = !box.classList.contains('is-on');
+      box.classList.toggle('is-on', on);
+      if (on) {
+        box.innerHTML = '<div class="dd-cities">' + cities().map(function (c) {
+          return '<div class="chip' + (c === S.user.city ? ' is-on' : '') + '" data-act="city" data-id="' + c + '">' + c + '</div>';
+        }).join('') + '</div>' + storesIn(S.user.city).map(function (s) {
+          return '<div class="store-dd-item' + (s.id === S.user.storeId ? ' is-on' : '') + '" data-act="pick-store" data-id="' + s.id + '">' + img(s.cover, '', 48, 48) + '<div class="main"><span class="mid-title">' + s.name + '</span><div class="muted" style="margin-top:4px;">' + s.address + (s.dist ? ' · ' + s.dist : '') + '</div></div>' + (s.id === S.user.storeId ? '<span class="tag tag-orange">当前</span>' : '') + '</div>';
+        }).join('');
+      }
+      return;
+    }
+    if (act === 'city') {
+      S.user.city = t.getAttribute('data-id');
+      persist();
+      if (cache['/home'] && cache['/home'].el.classList.contains('is-on')) {
+        document.querySelector('[data-act="toggle-dd"]').click();
+        document.querySelector('[data-act="toggle-dd"]').click();
+      } else updateStores();
+      return;
+    }
+    if (act === 'pick-store') {
+      var sid = t.getAttribute('data-id');
+      var st = storeById(sid);
+      S.user.storeId = sid;
+      if (st) S.user.city = st.city;
+      persist();
+      toast('已切换到' + st.name);
+      var dd2 = document.getElementById('storeDd');
+      if (dd2) dd2.classList.remove('is-on');
+      if (parseHash().path === '/stores') go('/home');
+      else if (cache['/home']) updateHome();
+      return;
+    }
+    if (act === 'login') {
+      S.loggedIn = true;
+      S.user.nickname = '黄炎';
+      S.user.avatar = photo('avatar-user');
+      persist();
+      toast('微信登录成功');
+      updateProfile();
+      return;
+    }
+    if (act === 'logout') {
+      confirmDlg('退出登录', '退出后本机看不到你的预约和订单。用同一个微信再登录，数据还在。', '确认退出').then(function (ok) {
+        if (!ok) return;
+        busy(true, '退出登录中');
+        setTimeout(function () {
+          S.loggedIn = false;
+          persist();
+          busy(false);
+          toast('已退出登录');
+          go('/profile', true);
+        }, 400);
+      });
+      return;
+    }
+    if (act === 'cs') { toast('请在微信中联系门店客服，电话见门店详情'); return; }
+    if (act === 'call') { toast('演示环境请自行拨打 ' + t.getAttribute('data-phone')); return; }
+    if (act === 'copy') {
+      var tx = t.getAttribute('data-text');
+      if (navigator.clipboard) navigator.clipboard.writeText(tx);
+      toast('地址已复制');
+      return;
+    }
+    if (act === 'mock-phone') { S.user.phone = '13800138000'; persist(); closeSheet(); toast('已授权手机号'); return; }
+    if (act === 'filter-type') {
+      openSheet('<div class="sheet-h">课程类型</div>' + COURSES.map(function (c) {
+        return '<div class="list-row" data-act="set-type" data-id="' + c.id + '">' + c.name + '</div>';
+      }).join(''));
+      return;
+    }
+    if (act === 'filter-store') {
+      openSheet('<div class="sheet-h">门店</div><div class="list-row" data-act="set-store" data-id="all">全部</div>' + storesIn(S.user.city).map(function (s) {
+        return '<div class="list-row" data-act="set-store" data-id="' + s.id + '">' + s.name + '</div>';
+      }).join(''));
+      return;
+    }
+    if (act === 'set-type') { S.schType = t.getAttribute('data-id'); closeSheet(); updateSchedule(); return; }
+    if (act === 'set-store') { S.schStore = t.getAttribute('data-id'); closeSheet(); updateSchedule(); return; }
+    if (act === 'book-class') {
+      if (!needLogin() || !needPhone()) return;
+      var s = find(CATALOG.sessions, t.getAttribute('data-id'));
+      if (S.bookings.some(function (b) { return b.sessionId === s.id && b.status === 'upcoming'; })) { toast('你已经约过这节课了'); return; }
+      startCheckout({ kind: 'group', title: s.name, when: md(s.date) + ' ' + s.start + '-' + s.end, place: storeById(s.storeId).name + ' · ' + s.room, extra: coachById(s.coachId).name, sessionId: s.id, price: s.price, cancelHours: 6 });
+      return;
+    }
+    if (act === 'buy-pkg') {
+      if (!needLogin() || !needPhone()) return;
+      var p = find(CATALOG.packages, t.getAttribute('data-id'));
+      startCheckout({ kind: 'package', title: p.name, when: p.sessions + ' 次 · ' + p.validDays + ' 天', place: '私教课包', extra: p.desc, packageId: p.id, price: p.price });
+      return;
+    }
+    if (act === 'buy-camp') {
+      if (!needLogin() || !needPhone()) return;
+      var camp = find(CATALOG.camps, t.getAttribute('data-id'));
+      startCheckout({ kind: 'camp', title: camp.name, when: '开营 ' + md(camp.startDate), place: storeById(camp.storeId).name, extra: camp.schedule, campId: camp.id, price: camp.price });
+      return;
+    }
+    if (act === 'buy-venue') {
+      if (!needLogin() || !needPhone()) return;
+      var v = find(CATALOG.venues, t.getAttribute('data-id'));
+      startCheckout({ kind: 'venue', title: v.name, when: v.hours, place: v.address, extra: v.dist, venueId: v.id, price: v.price, cancelHours: v.cancelHours });
+      return;
+    }
+    if (act === 'join-act') {
+      if (!needLogin() || !needPhone()) return;
+      var a = find(CATALOG.activities, t.getAttribute('data-id'));
+      if (a.status === 'ended') return;
+      if (!a.price) {
+        if (S.bookings.some(function (b) { return b.kind === 'activity' && b.title === a.name && b.status === 'upcoming'; })) { toast('已经报名'); return; }
+        a.booked += 1;
+        S.bookings.unshift({ id: uid('BK'), title: a.name, when: a.date + ' ' + a.time, kind: 'activity', status: 'upcoming' });
+        persist();
+        toast('报名成功');
+        go('/bookings');
+        return;
+      }
+      startCheckout({ kind: 'activity', title: a.name, when: a.date + ' ' + a.time, place: storeById(a.storeId).name, extra: a.intro, activityId: a.id, price: a.price });
+      return;
+    }
+    if (act === 'book-coach') {
+      if (!needLogin() || !needPhone()) return;
+      if (pkgRemain() <= 0) {
+        openSheet('<div class="sheet-h">需要课包</div><div class="pad muted">约私教请先购买课包。</div><div class="pad"><button class="btn btn-primary btn-lg" style="width:100%;" data-go="/packages">去看课包</button></div>');
+        return;
+      }
+      S.currentCoach = t.getAttribute('data-id');
+      S.selectedSlot = '';
+      S.slotDate = ymd(today());
+      go('/slots');
+      return;
+    }
+    if (act === 'pick-slot') { S.selectedSlot = t.getAttribute('data-id'); updateSlots(); return; }
+    if (act === 'confirm-slot') {
+      if (!S.selectedSlot) { toast('请选择时段'); return; }
+      if (pkgRemain() <= 0) { toast('课包次数不足'); return; }
+      S.owned[0].remain -= 1;
+      S.busySlots[S.slotDate + '|' + S.selectedSlot] = true;
+      var coach = coachById(S.currentCoach);
+      var oid = uid('O');
+      var bid = uid('BK');
+      var when = md(S.slotDate) + ' ' + S.selectedSlot;
+      S.orders.unshift({ id: oid, title: coach.name + ' 私教', payAmount: 0, status: 'paid', kind: 'private' });
+      S.bookings.unshift({ id: bid, orderId: oid, title: coach.name + ' 私教', when: when, kind: 'private', status: 'upcoming' });
+      S.lastResult = { ok: true, headline: '预约成功', title: coach.name + ' 私教', when: when };
+      persist();
+      toast('预约成功，已扣 1 次');
+      go('/result', true);
+      return;
+    }
+    if (act === 'pick-coupon') {
+      var items = [{ id: '', name: '不使用优惠券' }].concat(unusedCoupons().map(function (c) { return { id: c.id, name: c.name + ' 满' + c.min + '减' + c.amount }; }));
+      openSheet('<div class="sheet-h">选择优惠券</div>' + items.map(function (c) {
+        return '<div class="list-row" data-act="use-coupon" data-id="' + c.id + '">' + c.name + '</div>';
+      }).join(''));
+      return;
+    }
+    if (act === 'use-coupon') { S.couponId = t.getAttribute('data-id'); closeSheet(); updateConfirm(); return; }
+    if (act === 'go-pay') {
+      var ck = S.checkout;
+      var pay = payable(ck.price);
+      openSheet('<div class="sheet-h">微信支付（演示）</div><div style="text-align:center;padding:8px 16px;"><div class="muted">应付</div><div class="price" style="font-size:28px;margin:8px 0;">' + yuan(pay) + '</div><div class="muted">不会产生真实扣款，仅演示占名额与到账。</div></div><div class="pad"><button class="btn btn-primary btn-lg" style="width:100%;" data-act="confirm-pay">确认支付</button><button class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px;" data-act="close-sheet">取消</button></div>');
+      return;
+    }
+    if (act === 'confirm-pay') {
+      busy(true, '支付中');
+      setTimeout(function () { busy(false); doPay(); }, 280);
+      return;
+    }
+    if (act === 'notify') { S.user.notify = true; persist(); toast('已开启上课提醒'); return; }
+    if (act === 'cancel-bk') {
+      var b = find(S.bookings, t.getAttribute('data-id'));
+      confirmDlg('取消预约', '确认取消这节课？已支付订单将标记为已退款。', '确认取消').then(function (ok) {
+        if (!ok) return;
+        busy(true, '取消中');
+        setTimeout(function () {
+          b.status = 'cancelled';
+          if (b.sessionId) {
+            var s = find(CATALOG.sessions, b.sessionId);
+            if (s) s.booked = Math.max(0, s.booked - 1);
+          }
+          if (b.kind === 'private' && S.owned[0]) S.owned[0].remain += 1;
+          var o = find(S.orders, b.orderId);
+          if (o && o.status === 'paid' && o.payAmount > 0) o.status = 'refunded';
+          persist();
+          busy(false);
+          toast(o && o.payAmount > 0 ? '已取消，退款将在几分钟内原路退回' : '已取消');
+          updateBooking({ id: b.id });
+        }, 300);
+      });
+      return;
+    }
+    if (act === 'ent-submit') {
+      var company = (document.getElementById('entCompany') || {}).value || '';
+      var name = (document.getElementById('entName') || {}).value || '';
+      var phone = (document.getElementById('entPhone') || {}).value || '';
+      var need = (document.getElementById('entNeed') || {}).value || '';
+      if (!company || !name || !/^1\d{10}$/.test(phone) || !need) { toast('请填写完整信息'); return; }
+      toast('我们会电话联系你');
+      go('/profile');
+      return;
+    }
+    if (act === 'legal') {
+      var map = {
+        user: ['用户协议', '使用燃练预约课程、课包和活动时，请遵守门店规则。演示页数据写死在本地，不产生真实交易。'],
+        privacy: ['隐私政策', '演示页仅在浏览器本地保存登录与预约数据，不会上传到服务器。'],
+        about: ['关于我们', '燃练是健身房团课 / 私教预约小程序的用户端演示。']
+      };
+      var L = map[t.getAttribute('data-id')];
+      openSheet('<div class="sheet-h">' + L[0] + '</div><div class="pad" style="line-height:1.8;color:#e2b89a;">' + L[1] + '</div><div class="pad"><button class="btn btn-primary" style="width:100%;" data-act="close-sheet">我知道了</button></div>');
+    }
+  });
+  mask.addEventListener('click', function (e) { if (e.target === mask) closeSheet(); });
+
+  setInterval(function () {
+    if (!cache['/home'] || !cache['/home'].el.classList.contains('is-on')) return;
+    S.bannerIndex = (S.bannerIndex + 1) % CATALOG.banners.length;
+    var track = document.getElementById('swiperTrack');
+    var dots = document.getElementById('dots');
+    if (track) track.style.transform = 'translateX(-' + (S.bannerIndex * 100) + '%)';
+    if (dots) [].forEach.call(dots.children, function (d, i) { d.classList.toggle('is-on', i === S.bannerIndex); });
+  }, 4000);
+
+  window.addEventListener('hashchange', render);
+  if (!location.hash) location.replace('#/home');
+  else render();
+})();
+  </script>
+</body>
+</html>
